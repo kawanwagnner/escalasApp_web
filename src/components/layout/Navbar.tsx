@@ -9,6 +9,8 @@ import {
   Bell,
   Home,
   Clock,
+  Megaphone,
+  CalendarDays,
 } from "lucide-react";
 
 export const Navbar: React.FC = () => {
@@ -21,10 +23,12 @@ export const Navbar: React.FC = () => {
 
   const navItems = [
     { path: "/", label: "Dashboard", icon: Home },
-    { path: "/schedules", label: "Escalas", icon: Calendar },
-    { path: "/assignments", label: "Minhas Atribuições", icon: Clock },
-    { path: "/invites", label: "Convites", icon: Bell },
-    { path: "/profiles", label: "Perfis", icon: Users },
+    { path: "/ministerios", label: "Ministérios", icon: Calendar },
+    { path: "/minhas-escalas", label: "Minhas Escalas", icon: Clock },
+    { path: "/convites", label: "Convites", icon: Bell },
+    { path: "/comunicados", label: "Comunicados", icon: Megaphone },
+    { path: "/eventos", label: "Eventos", icon: CalendarDays },
+    { path: "/membros", label: "Membros", icon: Users },
   ];
 
   return (
@@ -61,7 +65,7 @@ export const Navbar: React.FC = () => {
 
           <div className="flex items-center gap-4">
             <Link
-              to="/profile"
+              to="/perfil"
               className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors"
             >
               <UserCircle className="h-6 w-6" />

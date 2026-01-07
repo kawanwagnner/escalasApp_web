@@ -1,46 +1,32 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 import { Calendar, Clock, Users, Bell } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "../context/AuthContext";
-import { Assignment, Schedule, SlotInvite } from "../types";
-import { assignmentService, inviteService, scheduleService } from "../services";
 import { Layout } from "../components/layout";
 import { Card } from "../components/ui";
+import { useSchedules } from "../hooks/useSchedules";
+import { useMyAssignments } from "../hooks/useAssignments";
+import { useMyInvites } from "../hooks/useInvites";
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [invites, setInvites] = useState<SlotInvite[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: allSchedules = [], isLoading: loadingSchedules } =
+    useSchedules();
+  const { data: allAssignments = [], isLoading: loadingAssignments } =
+    useMyAssignments(user?.id || "");
+  const { data: allInvites = [], isLoading: loadingInvites } = useMyInvites(
+    user?.email || ""
+  );
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [user]);
+  const schedules = allSchedules.slice(0, 5);
+  const assignments = allAssignments.slice(0, 5);
+  const invites = allInvites.filter((i) => i.status === "pending");
 
-  const loadDashboardData = async () => {
-    try {
-      const [schedulesData, assignmentsData, invitesData] = await Promise.all([
-        scheduleService.getAllSchedules(),
-        user
-          ? assignmentService.getMyAssignments(user.id)
-          : Promise.resolve([]),
-        user ? inviteService.getMyInvites(user.email) : Promise.resolve([]),
-      ]);
+  const isLoading = loadingSchedules || loadingAssignments || loadingInvites;
 
-      setSchedules(schedulesData.slice(0, 5));
-      setAssignments(assignmentsData.slice(0, 5));
-      setInvites(invitesData.filter((i: SlotInvite) => i.status === "pending"));
-    } catch (error) {
-      console.error("Erro ao carregar dashboard:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
@@ -55,7 +41,7 @@ export const Dashboard: React.FC = () => {
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Olá, {user?.full_name}! 👋
+            Olá, {user?.full_name || "Usuário"}! 👋
           </h1>
           <p className="text-gray-600">Bem-vindo ao seu painel de controle</p>
         </div>
@@ -65,9 +51,9 @@ export const Dashboard: React.FC = () => {
           <Card hover className="border-l-4 border-blue-600">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Escalas Ativas</p>
+                <p className="text-sm text-gray-600 mb-1">Ministérios</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {schedules.length}
+                  {allSchedules.length}
                 </p>
               </div>
               <Calendar className="h-12 w-12 text-blue-600 opacity-80" />
@@ -77,7 +63,7 @@ export const Dashboard: React.FC = () => {
           <Card hover className="border-l-4 border-green-600">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Minhas Atribuições</p>
+                <p className="text-sm text-gray-600 mb-1">Minhas Escalas</p>
                 <p className="text-3xl font-bold text-gray-900">
                   {assignments.length}
                 </p>
@@ -103,10 +89,7 @@ export const Dashboard: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Tipo de Perfil</p>
                 <p className="text-lg font-bold text-gray-900">
-                  {user?.is_teacher && "Professor"}
-                  {user?.is_musician &&
-                    (user?.is_teacher ? " / Músico" : "Músico")}
-                  {!user?.is_teacher && !user?.is_musician && "Membro"}
+                  {user?.role === "admin" ? "👑 Admin" : "👤 Membro"}
                 </p>
               </div>
               <Users className="h-12 w-12 text-orange-600 opacity-80" />

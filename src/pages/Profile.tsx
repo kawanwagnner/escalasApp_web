@@ -14,8 +14,6 @@ export const Profile: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: user?.full_name || "",
-    is_teacher: user?.is_teacher || false,
-    is_musician: user?.is_musician || false,
   });
 
   const handleSave = async () => {
@@ -57,29 +55,23 @@ export const Profile: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <div className="shrink-0">
               <div className="h-24 w-24 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
-                {user.full_name.charAt(0).toUpperCase()}
+                {user.full_name?.charAt(0)?.toUpperCase() || "?"}
               </div>
             </div>
             <div className="flex-1 text-center sm:text-left">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {user.full_name}
+                {user.full_name || "Sem nome"}
               </h2>
               <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                {user.is_teacher && (
-                  <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
-                    👨‍🏫 Professor
-                  </span>
-                )}
-                {user.is_musician && (
-                  <span className="px-3 py-1 bg-purple-100 text-purple-700 text-sm font-medium rounded-full">
-                    🎵 Músico
-                  </span>
-                )}
-                {!user.is_teacher && !user.is_musician && (
-                  <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-full">
-                    👤 Membro
-                  </span>
-                )}
+                <span
+                  className={`px-3 py-1 text-sm font-medium rounded-full ${
+                    user.role === "admin"
+                      ? "bg-purple-100 text-purple-700"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  {user.role === "admin" ? "👑 Admin" : "👤 Membro"}
+                </span>
               </div>
             </div>
             <div>
@@ -112,48 +104,6 @@ export const Profile: React.FC = () => {
                 }
               />
 
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-700">
-                  Funções
-                </label>
-                <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_teacher}
-                    onChange={(e) =>
-                      setFormData({ ...formData, is_teacher: e.target.checked })
-                    }
-                    className="h-5 w-5 rounded"
-                  />
-                  <div>
-                    <div className="font-medium text-gray-900">Professor</div>
-                    <div className="text-sm text-gray-600">
-                      Pode ministrar aulas e gerenciar alunos
-                    </div>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_musician}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        is_musician: e.target.checked,
-                      })
-                    }
-                    className="h-5 w-5 rounded"
-                  />
-                  <div>
-                    <div className="font-medium text-gray-900">Músico</div>
-                    <div className="text-sm text-gray-600">
-                      Participa de atividades musicais
-                    </div>
-                  </div>
-                </label>
-              </div>
-
               <div className="flex gap-3">
                 <Button
                   onClick={handleSave}
@@ -169,8 +119,6 @@ export const Profile: React.FC = () => {
                     setIsEditing(false);
                     setFormData({
                       full_name: user.full_name,
-                      is_teacher: user.is_teacher,
-                      is_musician: user.is_musician,
                     });
                   }}
                 >

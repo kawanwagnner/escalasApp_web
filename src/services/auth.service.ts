@@ -30,7 +30,22 @@ export const authService = {
   },
 
   async getCurrentUser(): Promise<User> {
-    const response = await api.get('/auth/v1/user');
-    return response.data;
+    // Primeiro busca o usuário autenticado
+    const authResponse = await api.get('/auth/v1/user');
+    const authUser = authResponse.data;
+    
+    // Depois busca o perfil completo na tabela profiles
+    const profileResponse = await api.get(`/rest/v1/profiles?id=eq.${authUser.id}&select=*`);
+    const profile = profileResponse.data[0];
+    
+    return {
+      id: authUser.id,
+      email: profile?.email || authUser.email,
+      full_name: profile?.full_name || '',
+      role: profile?.role,
+      phone: profile?.phone,
+      created_at: profile?.created_at || authUser.created_at,
+      updated_at: profile?.updated_at || authUser.updated_at,
+    };
   },
 };

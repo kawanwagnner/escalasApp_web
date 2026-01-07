@@ -10,11 +10,13 @@ import { ResetPassword } from "../pages/auth/ResetPassword";
 
 // Main Pages
 import { Dashboard } from "../pages/Dashboard";
-import { Schedules } from "../pages/Schedules";
-import { Assignments } from "../pages/Assignments";
-import { Invites } from "../pages/Invites";
-import { Profiles } from "../pages/Profiles";
+import Ministerios from "../pages/Ministerios";
+import { MinhasEscalas } from "../pages/MinhasEscalas";
+import Convites from "../pages/Convites";
+import { Membros } from "../pages/Membros";
 import { Profile } from "../pages/Profile";
+import Comunicados from "../pages/Comunicados";
+import Eventos from "../pages/Eventos";
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -36,42 +38,58 @@ export const AppRoutes: React.FC = () => {
             }
           />
           <Route
-            path="/schedules"
+            path="/ministerios"
             element={
               <ProtectedRoute>
-                <Schedules />
+                <Ministerios />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/assignments"
+            path="/minhas-escalas"
             element={
               <ProtectedRoute>
-                <Assignments />
+                <MinhasEscalas />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/invites"
+            path="/convites"
             element={
               <ProtectedRoute>
-                <Invites />
+                <Convites />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/profiles"
+            path="/membros"
             element={
               <ProtectedRoute>
-                <Profiles />
+                <Membros />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/profile"
+            path="/perfil"
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/comunicados"
+            element={
+              <ProtectedRoute>
+                <Comunicados />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/eventos"
+            element={
+              <ProtectedRoute>
+                <Eventos />
               </ProtectedRoute>
             }
           />

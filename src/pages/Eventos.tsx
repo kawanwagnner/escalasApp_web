@@ -1,11 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Layout } from "../components/layout/Layout";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Modal } from "../components/ui/Modal";
-import { publicEventService } from "../services/publicEvent.service";
 import { useAuth } from "../context/AuthContext";
+import {
+  useEvents,
+  useCreateEvent,
+  useUpdateEvent,
+  useDeleteEvent,
+} from "../hooks";
 import type { PublicEvent } from "../types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -13,8 +18,11 @@ import { CalendarDays, Plus, Trash2, Edit, Loader2 } from "lucide-react";
 
 export default function Eventos() {
   const { user } = useAuth();
-  const [events, setEvents] = useState<PublicEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: events = [], isLoading } = useEvents();
+  const createEvent = useCreateEvent();
+  const updateEvent = useUpdateEvent();
+  const deleteEvent = useDeleteEvent();
+
   const [showModal, setShowModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<PublicEvent | null>(null);
   const [formData, setFormData] = useState({
@@ -22,22 +30,6 @@ export default function Eventos() {
     description: "",
     date: "",
   });
-  const [formLoading, setFormLoading] = useState(false);
-
-  useEffect(() => {
-    loadEvents();
-  }, []);
-
-  const loadEvents = async () => {
-    try {
-      const data = await publicEventService.getAllPublicEvents();
-      setEvents(data);
-    } catch (error) {
-      console.error("Erro ao carregar eventos:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const openCreateModal = () => {
     setEditingEvent(null);
@@ -57,36 +49,34 @@ export default function Eventos() {
 
   const handleSubmit = async () => {
     if (!formData.title || !formData.date) return;
-    setFormLoading(true);
+
     try {
       if (editingEvent) {
-        await publicEventService.updatePublicEvent(editingEvent.id, formData);
+        await updateEvent.mutateAsync({ id: editingEvent.id, data: formData });
       } else {
-        await publicEventService.createPublicEvent({
+        await createEvent.mutateAsync({
           ...formData,
           created_by: user?.id || "",
         });
       }
       setShowModal(false);
-      loadEvents();
     } catch (error) {
       console.error("Erro ao salvar evento:", error);
-    } finally {
-      setFormLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este evento?")) return;
     try {
-      await publicEventService.deletePublicEvent(id);
-      loadEvents();
+      await deleteEvent.mutateAsync(id);
     } catch (error) {
       console.error("Erro ao excluir evento:", error);
     }
   };
 
-  if (loading) {
+  const formLoading = createEvent.isPending || updateEvent.isPending;
+
+  if (isLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">

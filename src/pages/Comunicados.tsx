@@ -1,51 +1,32 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Layout } from "../components/layout/Layout";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Modal } from "../components/ui/Modal";
-import { announcementService } from "../services/announcement.service";
 import { edgeFunctionService } from "../services/edgeFunction.service";
-import type { Announcement } from "../types";
+import { useAnnouncements, useCreateAnnouncement } from "../hooks";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Megaphone, Plus, Send, Loader2 } from "lucide-react";
 
 export default function Comunicados() {
-  const [comunicados, setComunicados] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: comunicados = [], isLoading } = useAnnouncements();
+  const createAnnouncement = useCreateAnnouncement();
+
   const [showModal, setShowModal] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
   const [formData, setFormData] = useState({ title: "", message: "" });
-  const [formLoading, setFormLoading] = useState(false);
-
-  useEffect(() => {
-    loadComunicados();
-  }, []);
-
-  const loadComunicados = async () => {
-    try {
-      const data = await announcementService.getAllAnnouncements();
-      setComunicados(data);
-    } catch (error) {
-      console.error("Erro ao carregar comunicados:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreate = async () => {
     if (!formData.title || !formData.message) return;
-    setFormLoading(true);
+
     try {
-      await announcementService.createAnnouncement(formData);
+      await createAnnouncement.mutateAsync(formData);
       setShowModal(false);
       setFormData({ title: "", message: "" });
-      loadComunicados();
     } catch (error) {
       console.error("Erro ao criar comunicado:", error);
-    } finally {
-      setFormLoading(false);
     }
   };
 
@@ -62,7 +43,7 @@ export default function Comunicados() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
@@ -158,7 +139,10 @@ export default function Comunicados() {
               <Button variant="secondary" onClick={() => setShowModal(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleCreate} isLoading={formLoading}>
+              <Button
+                onClick={handleCreate}
+                isLoading={createAnnouncement.isPending}
+              >
                 Criar Comunicado
               </Button>
             </div>

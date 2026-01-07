@@ -1,0 +1,2082 @@
+{
+  "info": {
+    "name": "Test Bolt API - Complete Collection",
+    "description": "Collection completa da API do Test Bolt - Todas as 50 rotas mapeadas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "supabase_url",
+      "value": "YOUR_SUPABASE_URL",
+      "type": "string"
+    },
+    {
+      "key": "supabase_anon_key",
+      "value": "YOUR_SUPABASE_ANON_KEY",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/auth/v1/token?grant_type=password",
+              "host": ["{{supabase_url}}"],
+              "path": ["auth", "v1", "token"],
+              "query": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                }
+              ]
+            },
+            "description": "Faz login com email e senha"
+          },
+          "response": []
+        },
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"password123\",\n  \"data\": {\n    \"full_name\": \"Nome Completo\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/auth/v1/signup",
+              "host": ["{{supabase_url}}"],
+              "path": ["auth", "v1", "signup"]
+            },
+            "description": "Registra novo usuário"
+          },
+          "response": []
+        },
+        {
+          "name": "Sign Out",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/auth/v1/logout",
+              "host": ["{{supabase_url}}"],
+              "path": ["auth", "v1", "logout"]
+            },
+            "description": "Faz logout do usuário"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/auth/v1/recover",
+              "host": ["{{supabase_url}}"],
+              "path": ["auth", "v1", "recover"]
+            },
+            "description": "Envia email para resetar senha"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/auth/v1/user",
+              "host": ["{{supabase_url}}"],
+              "path": ["auth", "v1", "user"]
+            },
+            "description": "Obtém dados do usuário autenticado"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Profiles",
+      "item": [
+        {
+          "name": "Get All Profiles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/profiles?select=*",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "profiles"],
+              "query": [
+                {
+                  "key": "select",
+                  "value": "*"
+                }
+              ]
+            },
+            "description": "Lista todos os perfis"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/profiles?id=eq.USER_ID&select=*",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "profiles"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.USER_ID"
+                },
+                {
+                  "key": "select",
+                  "value": "*"
+                }
+              ]
+            },
+            "description": "Obtém perfil por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Nome Atualizado\",\n  \"is_teacher\": true,\n  \"is_musician\": false\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/profiles?id=eq.USER_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "profiles"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.USER_ID"
+                }
+              ]
+            },
+            "description": "Atualiza dados do perfil"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Schedules",
+      "item": [
+        {
+          "name": "Get All Schedules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/schedules?select=*,created_by_profile:profiles!created_by(full_name)&order=date.asc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "schedules"],
+              "query": [
+                {
+                  "key": "select",
+                  "value": "*,created_by_profile:profiles!created_by(full_name)"
+                },
+                {
+                  "key": "order",
+                  "value": "date.asc"
+                }
+              ]
+            },
+            "description": "Lista todas as escalas"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Schedule by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/schedules?id=eq.SCHEDULE_ID&select=*,created_by_profile:profiles!created_by(full_name)",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "schedules"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.SCHEDULE_ID"
+                },
+                {
+                  "key": "select",
+                  "value": "*,created_by_profile:profiles!created_by(full_name)"
+                }
+              ]
+            },
+            "description": "Obtém escala por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Schedule",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Escala Domingo\",\n  \"description\": \"Escala para culto de domingo\",\n  \"date\": \"2026-01-12\",\n  \"notify_24h\": true,\n  \"notify_48h\": true,\n  \"notify_48h_musician\": true\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/schedules",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "schedules"]
+            },
+            "description": "Cria nova escala"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Schedule",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Escala Domingo - Atualizada\",\n  \"description\": \"Descrição atualizada\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/schedules?id=eq.SCHEDULE_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "schedules"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.SCHEDULE_ID"
+                }
+              ]
+            },
+            "description": "Atualiza escala existente"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Schedule",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/schedules?id=eq.SCHEDULE_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "schedules"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.SCHEDULE_ID"
+                }
+              ]
+            },
+            "description": "Deleta escala"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Slots",
+      "item": [
+        {
+          "name": "Get Slots by Schedule",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/slots?schedule_id=eq.SCHEDULE_ID&select=*,theme:themes(*),assignments(id,user:profiles!user_id(id,full_name))&order=date.asc.nullsfirst,start_time.asc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "slots"],
+              "query": [
+                {
+                  "key": "schedule_id",
+                  "value": "eq.SCHEDULE_ID"
+                },
+                {
+                  "key": "select",
+                  "value": "*,theme:themes(*),assignments(id,user:profiles!user_id(id,full_name))"
+                },
+                {
+                  "key": "order",
+                  "value": "date.asc.nullsfirst,start_time.asc"
+                }
+              ]
+            },
+            "description": "Lista slots de uma escala"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Slot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schedule_id\": \"SCHEDULE_ID\",\n  \"theme_id\": \"THEME_ID\",\n  \"date\": \"2026-01-12\",\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"10:30:00\",\n  \"mode\": \"manual\",\n  \"capacity\": 5,\n  \"title\": \"Louvor\",\n  \"description\": \"Momento de louvor\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/slots",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "slots"]
+            },
+            "description": "Cria novo slot"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Slot",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Louvor - Atualizado\",\n  \"capacity\": 6\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/slots?id=eq.SLOT_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "slots"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.SLOT_ID"
+                }
+              ]
+            },
+            "description": "Atualiza slot existente"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Slot",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/slots?id=eq.SLOT_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "slots"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.SLOT_ID"
+                }
+              ]
+            },
+            "description": "Deleta slot"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Themes",
+      "item": [
+        {
+          "name": "Get All Themes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/themes?select=*&order=name.asc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "themes"],
+              "query": [
+                {
+                  "key": "select",
+                  "value": "*"
+                },
+                {
+                  "key": "order",
+                  "value": "name.asc"
+                }
+              ]
+            },
+            "description": "Lista todos os temas"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Theme",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Fé e Esperança\",\n  \"description\": \"Tema sobre fé e esperança\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/themes",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "themes"]
+            },
+            "description": "Cria novo tema"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Announcements",
+      "item": [
+        {
+          "name": "Get All Announcements",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/announcements?select=*&order=created_at.desc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "announcements"],
+              "query": [
+                {
+                  "key": "select",
+                  "value": "*"
+                },
+                {
+                  "key": "order",
+                  "value": "created_at.desc"
+                }
+              ]
+            },
+            "description": "Lista todos os comunicados"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Announcement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Novo Comunicado\",\n  \"message\": \"Mensagem importante para todos\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/announcements",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "announcements"]
+            },
+            "description": "Cria novo comunicado"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Assignments",
+      "item": [
+        {
+          "name": "Get My Assignments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/assignments?user_id=eq.USER_ID&select=*,slot:slots!slot_id(id,title,date,start_time,end_time,schedule_id,schedule:schedules!schedule_id(id,title,date))&order=created_at.desc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "assignments"],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "eq.USER_ID"
+                },
+                {
+                  "key": "select",
+                  "value": "*,slot:slots!slot_id(id,title,date,start_time,end_time,schedule_id,schedule:schedules!schedule_id(id,title,date))"
+                },
+                {
+                  "key": "order",
+                  "value": "created_at.desc"
+                }
+              ]
+            },
+            "description": "Lista minhas atribuições em slots"
+          },
+          "response": []
+        },
+        {
+          "name": "Assign to Slot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slot_id\": \"SLOT_ID\",\n  \"user_id\": \"USER_ID\",\n  \"assigned_by\": \"ADMIN_ID\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/assignments",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "assignments"]
+            },
+            "description": "Atribui usuário a um slot"
+          },
+          "response": []
+        },
+        {
+          "name": "Unassign from Slot",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/assignments?id=eq.ASSIGNMENT_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "assignments"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.ASSIGNMENT_ID"
+                }
+              ]
+            },
+            "description": "Remove atribuição de um slot"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Slot Invites",
+      "item": [
+        {
+          "name": "Get My Slot Invites",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/slot_invites?select=*,slot:slots!slot_id(id,title,start_time,end_time,mode,capacity,schedule_id)&order=created_at.desc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "slot_invites"],
+              "query": [
+                {
+                  "key": "select",
+                  "value": "*,slot:slots!slot_id(id,title,start_time,end_time,mode,capacity,schedule_id)"
+                },
+                {
+                  "key": "order",
+                  "value": "created_at.desc"
+                }
+              ]
+            },
+            "description": "Lista meus convites para slots"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Invites by Slot",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/slot_invites?slot_id=eq.SLOT_ID&select=*&order=created_at.desc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "slot_invites"],
+              "query": [
+                {
+                  "key": "slot_id",
+                  "value": "eq.SLOT_ID"
+                },
+                {
+                  "key": "select",
+                  "value": "*"
+                },
+                {
+                  "key": "order",
+                  "value": "created_at.desc"
+                }
+              ]
+            },
+            "description": "Lista convites de um slot específico"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Slot Invite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slot_id\": \"SLOT_ID\",\n  \"email\": \"invited@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/slot_invites",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "slot_invites"]
+            },
+            "description": "Cria convite para slot (modo manual)"
+          },
+          "response": []
+        },
+        {
+          "name": "Accept Slot Invite",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\",\n  \"accepted_by\": \"USER_ID\",\n  \"accepted_at\": \"2026-01-07T10:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/slot_invites?id=eq.INVITE_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "slot_invites"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.INVITE_ID"
+                }
+              ]
+            },
+            "description": "Aceita convite para slot"
+          },
+          "response": []
+        },
+        {
+          "name": "Decline Slot Invite",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"declined\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/slot_invites?id=eq.INVITE_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "slot_invites"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.INVITE_ID"
+                }
+              ]
+            },
+            "description": "Recusa convite para slot"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Slot Invite",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/slot_invites?id=eq.INVITE_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "slot_invites"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.INVITE_ID"
+                }
+              ]
+            },
+            "description": "Deleta convite para slot"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Public Events",
+      "item": [
+        {
+          "name": "Get All Public Events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/public_events?select=*&order=date.asc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "public_events"],
+              "query": [
+                {
+                  "key": "select",
+                  "value": "*"
+                },
+                {
+                  "key": "order",
+                  "value": "date.asc"
+                }
+              ]
+            },
+            "description": "Lista todos os eventos públicos"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Public Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Congresso de Jovens\",\n  \"date\": \"2026-02-15\",\n  \"description\": \"Evento especial para jovens\",\n  \"created_by\": \"USER_ID\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/public_events",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "public_events"]
+            },
+            "description": "Cria novo evento público"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Public Event",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Congresso de Jovens - Atualizado\",\n  \"description\": \"Nova descrição\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/public_events?id=eq.EVENT_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "public_events"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.EVENT_ID"
+                }
+              ]
+            },
+            "description": "Atualiza evento público"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Public Event",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/public_events?id=eq.EVENT_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "public_events"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.EVENT_ID"
+                }
+              ]
+            },
+            "description": "Deleta evento público"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/notifications?user_id=eq.USER_ID&select=*&order=created_at.desc&limit=50",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "notifications"],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "eq.USER_ID"
+                },
+                {
+                  "key": "select",
+                  "value": "*"
+                },
+                {
+                  "key": "order",
+                  "value": "created_at.desc"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Lista minhas notificações"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"read\": true\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/notifications?id=eq.NOTIFICATION_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "notifications"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.NOTIFICATION_ID"
+                }
+              ]
+            },
+            "description": "Marca notificação como lida"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"USER_ID\",\n  \"title\": \"Nova Notificação\",\n  \"body\": \"Mensagem da notificação\",\n  \"data\": {}\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/notifications",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "notifications"]
+            },
+            "description": "Cria nova notificação"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Device Tokens",
+      "item": [
+        {
+          "name": "Get My Device Tokens",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/device_tokens?user_id=eq.USER_ID&select=*&order=created_at.desc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "device_tokens"],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "eq.USER_ID"
+                },
+                {
+                  "key": "select",
+                  "value": "*"
+                },
+                {
+                  "key": "order",
+                  "value": "created_at.desc"
+                }
+              ]
+            },
+            "description": "Lista meus tokens de dispositivo para push"
+          },
+          "response": []
+        },
+        {
+          "name": "Upsert Device Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "resolution=merge-duplicates,return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"USER_ID\",\n  \"token\": \"ExponentPushToken[xxxxx]\",\n  \"active\": true\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/device_tokens",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "device_tokens"]
+            },
+            "description": "Cria ou atualiza token de dispositivo"
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Device Token",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": false\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/device_tokens?id=eq.TOKEN_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "device_tokens"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.TOKEN_ID"
+                }
+              ]
+            },
+            "description": "Desativa token de dispositivo"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Scheduled Notifications",
+      "item": [
+        {
+          "name": "Get All Scheduled Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/scheduled_notifications?select=*&order=scheduled_for.asc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "scheduled_notifications"],
+              "query": [
+                {
+                  "key": "select",
+                  "value": "*"
+                },
+                {
+                  "key": "order",
+                  "value": "scheduled_for.asc"
+                }
+              ]
+            },
+            "description": "Lista todas as notificações agendadas"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Scheduled Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"USER_ID\",\n  \"title\": \"Lembrete de Escala\",\n  \"body\": \"Você tem escala amanhã às 9h\",\n  \"scheduled_for\": \"2026-01-08T09:00:00Z\",\n  \"data\": {\n    \"type\": \"assignment_reminder\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/scheduled_notifications",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "scheduled_notifications"]
+            },
+            "description": "Cria notificação agendada"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Scheduled Notification",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/scheduled_notifications?id=eq.NOTIFICATION_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "scheduled_notifications"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.NOTIFICATION_ID"
+                }
+              ]
+            },
+            "description": "Cancela notificação agendada"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Students",
+      "item": [
+        {
+          "name": "Get All Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/students?select=*,group:groups(*)&order=full_name.asc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "students"],
+              "query": [
+                {
+                  "key": "select",
+                  "value": "*,group:groups(*)"
+                },
+                {
+                  "key": "order",
+                  "value": "full_name.asc"
+                }
+              ]
+            },
+            "description": "Lista todos os estudantes"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/students?id=eq.STUDENT_ID&select=*,group:groups(*)",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "students"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.STUDENT_ID"
+                },
+                {
+                  "key": "select",
+                  "value": "*,group:groups(*)"
+                }
+              ]
+            },
+            "description": "Obtém estudante por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"João Silva\",\n  \"birth_date\": \"2015-05-10\",\n  \"sex\": \"Masculino\",\n  \"group_id\": \"GROUP_ID\",\n  \"guardian_name\": \"Maria Silva\",\n  \"guardian_contact\": \"(11) 98888-8888\",\n  \"notes\": \"Observações sobre o aluno\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/students",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "students"]
+            },
+            "description": "Cria novo estudante"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Student",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"group_id\": \"NEW_GROUP_ID\",\n  \"notes\": \"Novas observações\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/students?id=eq.STUDENT_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "students"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.STUDENT_ID"
+                }
+              ]
+            },
+            "description": "Atualiza dados do estudante"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Student",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/students?id=eq.STUDENT_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "students"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.STUDENT_ID"
+                }
+              ]
+            },
+            "description": "Deleta estudante"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Groups",
+      "item": [
+        {
+          "name": "Get All Groups",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/groups?select=*&order=name.asc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "groups"],
+              "query": [
+                {
+                  "key": "select",
+                  "value": "*"
+                },
+                {
+                  "key": "order",
+                  "value": "name.asc"
+                }
+              ]
+            },
+            "description": "Lista todos os grupos (Betel, Peniel)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Group by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/groups?id=eq.GROUP_ID&select=*",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "groups"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.GROUP_ID"
+                },
+                {
+                  "key": "select",
+                  "value": "*"
+                }
+              ]
+            },
+            "description": "Obtém grupo por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Novo Grupo\",\n  \"description\": \"Descrição do grupo\",\n  \"min_age\": 5,\n  \"max_age\": 10\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/groups",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "groups"]
+            },
+            "description": "Cria novo grupo"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Group",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "string"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Nova descrição\",\n  \"min_age\": 6,\n  \"max_age\": 12\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/groups?id=eq.GROUP_ID",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "groups"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "eq.GROUP_ID"
+                }
+              ]
+            },
+            "description": "Atualiza dados do grupo"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Edge Functions",
+      "item": [
+        {
+          "name": "Send Announcement Emails",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"announcementId\": \"ANNOUNCEMENT_ID\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/functions/v1/send-announcement-emails-smtp",
+              "host": ["{{supabase_url}}"],
+              "path": ["functions", "v1", "send-announcement-emails-smtp"]
+            },
+            "description": "Envia emails de comunicado para todos os usuários"
+          },
+          "response": []
+        },
+        {
+          "name": "Send Scheduled Notifications",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "string"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/functions/v1/send-scheduled-notifications",
+              "host": ["{{supabase_url}}"],
+              "path": ["functions", "v1", "send-scheduled-notifications"]
+            },
+            "description": "Processa e envia notificações agendadas (executado via cron)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

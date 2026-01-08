@@ -9,7 +9,7 @@ import { assignmentService } from "../services/assignment.service";
 import type { Schedule, Slot } from "../types";
 import { Plus, Trash2, Eye, Users, Clock, Calendar, Music, ChevronDown, ChevronUp, Info, Bell } from "lucide-react";
 import { MemberAutocomplete } from "../components/ui/MemberAutocomplete";
-import { formatDate } from "../utils/dateHelpers";
+import { formatDate, formatTime } from "../utils/dateHelpers";
 import { useAuth } from "../context/AuthContext";
 import {
   useSchedules,
@@ -460,7 +460,7 @@ export const Ministerios = () => {
                           </h4>
                           <div className="flex items-center gap-2 text-xs text-gray-500">
                             <Clock className="h-3 w-3" />
-                            <span>{escala.start_time} - {escala.end_time}</span>
+                            <span>{formatTime(escala.start_time)} - {formatTime(escala.end_time)}</span>
                           </div>
                         </div>
                       </div>

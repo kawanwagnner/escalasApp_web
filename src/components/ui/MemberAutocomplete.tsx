@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Search, Clock, User, X } from "lucide-react";
 import type { Profile } from "../../types";
 
@@ -21,8 +22,10 @@ export const MemberAutocomplete: React.FC<MemberAutocompleteProps> = ({
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [recentMembers, setRecentMembers] = useState<Profile[]>([]);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Carregar membros recentes do localStorage
   useEffect(() => {
@@ -40,21 +43,40 @@ export const MemberAutocomplete: React.FC<MemberAutocompleteProps> = ({
     }
   }, [members]);
 
+  // Atualizar posição do dropdown
+  const updateDropdownPosition = () => {
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+        zIndex: 99999,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      updateDropdownPosition();
+      window.addEventListener('scroll', updateDropdownPosition, true);
+      window.addEventListener('resize', updateDropdownPosition);
+    }
+    return () => {
+      window.removeEventListener('scroll', updateDropdownPosition, true);
+      window.removeEventListener('resize', updateDropdownPosition);
+    };
+  }, [isOpen]);
+
   // Salvar membro no histórico
   const saveToRecent = (member: Profile) => {
     const stored = localStorage.getItem(RECENT_MEMBERS_KEY);
     let recentIds: string[] = stored ? JSON.parse(stored) : [];
-    
-    // Remove se já existe e adiciona no início
     recentIds = recentIds.filter((id) => id !== member.id);
     recentIds.unshift(member.id);
-    
-    // Manter apenas os últimos MAX_RECENT
     recentIds = recentIds.slice(0, MAX_RECENT);
-    
     localStorage.setItem(RECENT_MEMBERS_KEY, JSON.stringify(recentIds));
-    
-    // Atualizar estado
     const recent = recentIds
       .map((id) => members.find((m) => m.id === id))
       .filter((m): m is Profile => m !== undefined);
@@ -65,7 +87,6 @@ export const MemberAutocomplete: React.FC<MemberAutocompleteProps> = ({
   const filteredMembers = members.filter((member) => {
     if (excludeIds.includes(member.id)) return false;
     if (!query) return false;
-    
     const searchLower = query.toLowerCase();
     return (
       member.full_name?.toLowerCase().includes(searchLower) ||
@@ -81,7 +102,11 @@ export const MemberAutocomplete: React.FC<MemberAutocompleteProps> = ({
   // Fechar ao clicar fora
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        containerRef.current && !containerRef.current.contains(target) &&
+        dropdownRef.current && !dropdownRef.current.contains(target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -129,13 +154,17 @@ export const MemberAutocomplete: React.FC<MemberAutocompleteProps> = ({
         )}
       </div>
 
-      {showDropdown && (
-        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+      {showDropdown && createPortal(
+        <div 
+          ref={dropdownRef}
+          style={dropdownStyle}
+          className="bg-white border border-gray-200 rounded-lg shadow-2xl max-h-64 overflow-y-auto"
+        >
           {/* Resultados da busca */}
           {query && filteredMembers.length > 0 && (
             <div>
-              <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase bg-gray-50">
-                Resultados
+              <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase bg-gray-50 border-b">
+                Resultados ({filteredMembers.length})
               </div>
               {filteredMembers.map((member) => (
                 <button
@@ -162,14 +191,14 @@ export const MemberAutocomplete: React.FC<MemberAutocompleteProps> = ({
           {/* Sem resultados */}
           {query && filteredMembers.length === 0 && (
             <div className="px-3 py-4 text-center text-sm text-gray-500">
-              Nenhum membro encontrado
+              Nenhum membro encontrado com "{query}"
             </div>
           )}
 
           {/* Histórico de recentes */}
           {!query && availableRecent.length > 0 && (
             <div>
-              <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase bg-gray-50 flex items-center gap-1">
+              <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase bg-gray-50 flex items-center gap-1 border-b">
                 <Clock className="h-3 w-3" />
                 Usados recentemente
               </div>
@@ -199,7 +228,8 @@ export const MemberAutocomplete: React.FC<MemberAutocompleteProps> = ({
               Digite para buscar membros
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

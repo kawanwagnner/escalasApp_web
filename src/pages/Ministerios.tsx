@@ -5,7 +5,7 @@ import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
 import { Input } from "../components/ui/Input";
 import { slotService } from "../services/slot.service";
-import { assignmentService } from "../services/assignment.service";
+import { inviteService } from "../services/invite.service";
 import type { Schedule, Slot } from "../types";
 import { Plus, Trash2, Eye, Users, Clock, Calendar, Music, ChevronDown, ChevronUp, Info, Bell } from "lucide-react";
 import { MemberAutocomplete } from "../components/ui/MemberAutocomplete";
@@ -135,18 +135,17 @@ export const Ministerios = () => {
     }
   };
 
-  const handleAssignMember = async (slotId: string, userId: string) => {
+  const handleInviteMember = async (slotId: string, memberEmail: string) => {
     try {
-      await assignmentService.assignToSlot({
+      await inviteService.createInvite({
         slot_id: slotId,
-        user_id: userId,
-        assigned_by: user!.id,
+        email: memberEmail,
       });
       if (selectedMinisterio) {
         loadEscalas(selectedMinisterio.id);
       }
     } catch (error) {
-      console.error("Erro ao escalar membro:", error);
+      console.error("Erro ao convidar membro:", error);
     }
   };
 
@@ -501,53 +500,121 @@ export const Ministerios = () => {
                       />
                     )}
 
-                    {/* Info de vagas */}
+                    {/* Info de vagas - só conta confirmados */}
                     <div className="flex items-center gap-4 mb-4">
                       <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
                         <Users className="h-4 w-4 text-gray-500" />
                         <span className="text-sm font-medium text-gray-700">
-                          {(escala as any).assignments?.length || 0} / {escala.capacity} vagas
+                          {(escala as any).assignments?.length || 0} / {escala.capacity} vagas confirmadas
                         </span>
                       </div>
+                      {(escala as any).invites?.filter((i: any) => i.status === 'pending')?.length > 0 && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 rounded-lg">
+                          <Clock className="h-4 w-4 text-yellow-600" />
+                          <span className="text-sm font-medium text-yellow-700">
+                            {(escala as any).invites?.filter((i: any) => i.status === 'pending')?.length} pendentes
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Escalados */}
-                    <div className="space-y-3">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Membros Escalados
+                    {/* Membros Confirmados */}
+                    <div className="space-y-3 mb-4">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        Confirmados ({(escala as any).assignments?.length || 0})
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {(escala as any).assignments?.length > 0 ? (
                           (escala as any).assignments?.map((assignment: any) => (
                             <div
                               key={assignment.id}
-                              className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-full"
+                              className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 text-green-800 text-sm rounded-full"
                             >
-                              <div className="w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-medium">
+                              <div className="w-5 h-5 bg-green-200 rounded-full flex items-center justify-center text-xs font-medium">
                                 {assignment.user?.full_name?.charAt(0)?.toUpperCase()}
                               </div>
                               {assignment.user?.full_name}
+                              <span className="text-green-600 text-xs">✓</span>
                             </div>
                           ))
                         ) : (
                           <p className="text-sm text-gray-400 italic">
-                            Nenhum membro escalado ainda
+                            Nenhum membro confirmado ainda
                           </p>
                         )}
                       </div>
-
-                      {/* Autocomplete para escalar membro - só admin */}
-                      {user?.role === 'admin' && (
-                        <div className="mt-3">
-                          <MemberAutocomplete
-                            members={membros}
-                            excludeIds={(escala as any).assignments?.map((a: any) => a.user_id) || []}
-                            onSelect={(member) => handleAssignMember(escala.id, member.id)}
-                            placeholder="Buscar membro por nome ou email..."
-                          />
-                        </div>
-                      )}
                     </div>
+
+                    {/* Convites Pendentes */}
+                    {(escala as any).invites?.filter((i: any) => i.status === 'pending')?.length > 0 && (
+                      <div className="space-y-3 mb-4">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                          <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                          Pendentes ({(escala as any).invites?.filter((i: any) => i.status === 'pending')?.length})
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {(escala as any).invites
+                            ?.filter((i: any) => i.status === 'pending')
+                            ?.map((invite: any) => (
+                              <div
+                                key={invite.id}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-full"
+                              >
+                                <div className="w-5 h-5 bg-yellow-200 rounded-full flex items-center justify-center text-xs font-medium">
+                                  {invite.email?.charAt(0)?.toUpperCase()}
+                                </div>
+                                {invite.email}
+                                <span className="text-yellow-600 text-xs">⏳</span>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Convites Recusados */}
+                    {(escala as any).invites?.filter((i: any) => i.status === 'declined')?.length > 0 && (
+                      <div className="space-y-3 mb-4">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                          Recusados ({(escala as any).invites?.filter((i: any) => i.status === 'declined')?.length})
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {(escala as any).invites
+                            ?.filter((i: any) => i.status === 'declined')
+                            ?.map((invite: any) => (
+                              <div
+                                key={invite.id}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200 text-red-800 text-sm rounded-full opacity-60"
+                              >
+                                <div className="w-5 h-5 bg-red-200 rounded-full flex items-center justify-center text-xs font-medium">
+                                  {invite.email?.charAt(0)?.toUpperCase()}
+                                </div>
+                                {invite.email}
+                                <span className="text-red-600 text-xs">✗</span>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Autocomplete para convidar membro - só admin */}
+                    {user?.role === 'admin' && (
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                          Convidar membro
+                        </p>
+                        <MemberAutocomplete
+                          members={membros}
+                          excludeIds={[
+                            ...((escala as any).assignments?.map((a: any) => a.user_id) || []),
+                            ...((escala as any).invites?.map((i: any) => membros.find((m: any) => m.email === i.email)?.id).filter(Boolean) || [])
+                          ]}
+                          onSelect={(member) => handleInviteMember(escala.id, member.email)}
+                          placeholder="Buscar membro por nome ou email..."
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

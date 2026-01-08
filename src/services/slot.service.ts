@@ -3,9 +3,9 @@ import type { Slot } from '../types';
 
 export const slotService = {
   async getSlotsBySchedule(scheduleId: string): Promise<Slot[]> {
-    // Incluir assignments com dados do usuário
+    // Incluir assignments e convites com dados do usuário
     const response = await api.get(
-      `/rest/v1/slots?schedule_id=eq.${scheduleId}&select=*,assignments:assignments(id,user_id,user:profiles!user_id(id,full_name,email))&order=date.asc,start_time.asc`
+      `/rest/v1/slots?schedule_id=eq.${scheduleId}&select=*,assignments:assignments(id,user_id,user:profiles!user_id(id,full_name,email)),invites:slot_invites(id,email,status,created_at)&order=date.asc,start_time.asc`
     );
     return response.data;
   },

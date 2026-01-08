@@ -1,0 +1,206 @@
+import { useState, useRef, useEffect } from "react";
+import { Search, Clock, User, X } from "lucide-react";
+import type { Profile } from "../../types";
+
+interface MemberAutocompleteProps {
+  members: Profile[];
+  onSelect: (member: Profile) => void;
+  placeholder?: string;
+  excludeIds?: string[];
+}
+
+const RECENT_MEMBERS_KEY = "escalas_recent_members";
+const MAX_RECENT = 5;
+
+export const MemberAutocomplete: React.FC<MemberAutocompleteProps> = ({
+  members,
+  onSelect,
+  placeholder = "Digite o nome ou email...",
+  excludeIds = [],
+}) => {
+  const [query, setQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [recentMembers, setRecentMembers] = useState<Profile[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Carregar membros recentes do localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem(RECENT_MEMBERS_KEY);
+    if (stored) {
+      try {
+        const recentIds: string[] = JSON.parse(stored);
+        const recent = recentIds
+          .map((id) => members.find((m) => m.id === id))
+          .filter((m): m is Profile => m !== undefined);
+        setRecentMembers(recent);
+      } catch {
+        setRecentMembers([]);
+      }
+    }
+  }, [members]);
+
+  // Salvar membro no histórico
+  const saveToRecent = (member: Profile) => {
+    const stored = localStorage.getItem(RECENT_MEMBERS_KEY);
+    let recentIds: string[] = stored ? JSON.parse(stored) : [];
+    
+    // Remove se já existe e adiciona no início
+    recentIds = recentIds.filter((id) => id !== member.id);
+    recentIds.unshift(member.id);
+    
+    // Manter apenas os últimos MAX_RECENT
+    recentIds = recentIds.slice(0, MAX_RECENT);
+    
+    localStorage.setItem(RECENT_MEMBERS_KEY, JSON.stringify(recentIds));
+    
+    // Atualizar estado
+    const recent = recentIds
+      .map((id) => members.find((m) => m.id === id))
+      .filter((m): m is Profile => m !== undefined);
+    setRecentMembers(recent);
+  };
+
+  // Filtrar membros pela query
+  const filteredMembers = members.filter((member) => {
+    if (excludeIds.includes(member.id)) return false;
+    if (!query) return false;
+    
+    const searchLower = query.toLowerCase();
+    return (
+      member.full_name?.toLowerCase().includes(searchLower) ||
+      member.email?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  // Membros recentes que não estão excluídos
+  const availableRecent = recentMembers.filter(
+    (m) => !excludeIds.includes(m.id)
+  );
+
+  // Fechar ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelect = (member: Profile) => {
+    saveToRecent(member);
+    onSelect(member);
+    setQuery("");
+    setIsOpen(false);
+  };
+
+  const showDropdown = isOpen && (query.length > 0 || availableRecent.length > 0);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+          placeholder={placeholder}
+          className="w-full pl-10 pr-10 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 
+                     hover:bg-gray-100 focus:bg-white focus:border-blue-500 focus:ring-2 
+                     focus:ring-blue-200 transition-all outline-none"
+        />
+        {query && (
+          <button
+            onClick={() => {
+              setQuery("");
+              inputRef.current?.focus();
+            }}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full"
+          >
+            <X className="h-3 w-3 text-gray-400" />
+          </button>
+        )}
+      </div>
+
+      {showDropdown && (
+        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+          {/* Resultados da busca */}
+          {query && filteredMembers.length > 0 && (
+            <div>
+              <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase bg-gray-50">
+                Resultados
+              </div>
+              {filteredMembers.map((member) => (
+                <button
+                  key={member.id}
+                  onClick={() => handleSelect(member)}
+                  className="w-full px-3 py-2 flex items-center gap-3 hover:bg-blue-50 transition-colors text-left"
+                >
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-blue-600">
+                      {member.full_name?.charAt(0)?.toUpperCase() || "?"}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {member.full_name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">{member.email}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Sem resultados */}
+          {query && filteredMembers.length === 0 && (
+            <div className="px-3 py-4 text-center text-sm text-gray-500">
+              Nenhum membro encontrado
+            </div>
+          )}
+
+          {/* Histórico de recentes */}
+          {!query && availableRecent.length > 0 && (
+            <div>
+              <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase bg-gray-50 flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                Usados recentemente
+              </div>
+              {availableRecent.map((member) => (
+                <button
+                  key={member.id}
+                  onClick={() => handleSelect(member)}
+                  className="w-full px-3 py-2 flex items-center gap-3 hover:bg-blue-50 transition-colors text-left"
+                >
+                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                    <User className="h-4 w-4 text-gray-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {member.full_name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">{member.email}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Instrução quando vazio */}
+          {!query && availableRecent.length === 0 && (
+            <div className="px-3 py-4 text-center text-sm text-gray-500">
+              Digite para buscar membros
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};

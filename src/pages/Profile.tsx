@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 
 import { UserCircle, Mail, Calendar, Edit, Save } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatDate } from "../utils/dateHelpers";
 import { profileService } from "../services";
 import { Layout } from "../components/layout";
 import { Button, Card, Input } from "../components/ui";
@@ -151,13 +150,7 @@ export const Profile: React.FC = () => {
                 <div>
                   <div className="text-sm text-gray-600">Membro desde</div>
                   <div className="font-medium text-gray-900">
-                    {format(
-                      new Date(user.created_at),
-                      "dd 'de' MMMM 'de' yyyy",
-                      {
-                        locale: ptBR,
-                      }
-                    )}
+                    {formatDate(user.created_at, "long")}
                   </div>
                 </div>
               </div>

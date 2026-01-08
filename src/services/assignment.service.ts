@@ -3,7 +3,10 @@ import type { Assignment } from '../types';
 
 export const assignmentService = {
   async getMyAssignments(userId: string): Promise<Assignment[]> {
-    const response = await api.get(`/rest/v1/assignments?user_id=eq.${userId}&select=*`);
+    // Buscar assignments com join em slot e schedule (usando sintaxe correta do Supabase)
+    const response = await api.get(
+      `/rest/v1/assignments?user_id=eq.${userId}&select=*,slot:slots!slot_id(id,title,date,start_time,end_time,schedule_id,schedule:schedules!schedule_id(id,title,date))&order=created_at.desc`
+    );
     return response.data;
   },
 

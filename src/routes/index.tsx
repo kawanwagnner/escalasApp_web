@@ -17,6 +17,7 @@ import { Membros } from "../pages/Membros";
 import { Profile } from "../pages/Profile";
 import Comunicados from "../pages/Comunicados";
 import Eventos from "../pages/Eventos";
+import Agenda from "../pages/Agenda";
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -90,6 +91,14 @@ export const AppRoutes: React.FC = () => {
             element={
               <ProtectedRoute>
                 <Eventos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/agenda"
+            element={
+              <ProtectedRoute>
+                <Agenda />
               </ProtectedRoute>
             }
           />

@@ -64,6 +64,7 @@ export interface Slot {
   description?: string;
   created_at: string;
   updated_at: string;
+  schedule?: Schedule;
 }
 
 export interface Assignment {

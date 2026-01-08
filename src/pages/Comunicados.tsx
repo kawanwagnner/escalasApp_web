@@ -6,8 +6,7 @@ import { Input } from "../components/ui/Input";
 import { Modal } from "../components/ui/Modal";
 import { edgeFunctionService } from "../services/edgeFunction.service";
 import { useAnnouncements, useCreateAnnouncement } from "../hooks";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatDate } from "../utils/dateHelpers";
 import { Megaphone, Plus, Send, Loader2 } from "lucide-react";
 
 export default function Comunicados() {
@@ -96,11 +95,7 @@ export default function Comunicados() {
                           {comunicado.title}
                         </h3>
                         <p className="text-sm text-gray-500">
-                          {format(
-                            new Date(comunicado.created_at),
-                            "dd 'de' MMMM 'às' HH:mm",
-                            { locale: ptBR }
-                          )}
+                          {formatDate(comunicado.created_at, "datetime")}
                         </p>
                       </div>
                     </div>

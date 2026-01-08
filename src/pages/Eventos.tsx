@@ -12,8 +12,7 @@ import {
   useDeleteEvent,
 } from "../hooks";
 import type { PublicEvent } from "../types";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatDate } from "../utils/dateHelpers";
 import { CalendarDays, Plus, Trash2, Edit, Loader2 } from "lucide-react";
 
 export default function Eventos() {
@@ -118,48 +117,64 @@ export default function Eventos() {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {events.map((event) => (
-              <Card key={event.id}>
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <CalendarDays className="w-6 h-6 text-purple-600" />
+            {events.map((event) => {
+              const eventDate = new Date(event.date + "T00:00:00");
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const isPastEvent = eventDate < today;
+
+              return (
+                <Card key={event.id} className={isPastEvent ? "opacity-60" : ""}>
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                          isPastEvent ? "bg-gray-100" : "bg-purple-100"
+                        }`}>
+                          <CalendarDays className={`w-6 h-6 ${
+                            isPastEvent ? "text-gray-400" : "text-purple-600"
+                          }`} />
+                        </div>
+                        {isPastEvent && (
+                          <span className="px-2.5 py-1 bg-gray-200 text-gray-600 text-xs font-semibold rounded-full">
+                            Passou
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => openEditModal(event)}
+                          className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(event.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => openEditModal(event)}
-                        className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(event.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {event.title}
+                      </h3>
+                      <p className={`text-sm font-medium ${
+                        isPastEvent ? "text-gray-500" : "text-indigo-600"
+                      }`}>
+                        {formatDate(event.date, "weekday")}
+                      </p>
                     </div>
+                    {event.description && (
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {event.description}
+                      </p>
+                    )}
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">
-                      {event.title}
-                    </h3>
-                    <p className="text-sm text-indigo-600 font-medium">
-                      {format(
-                        new Date(event.date + "T00:00:00"),
-                        "EEEE, dd 'de' MMMM",
-                        { locale: ptBR }
-                      )}
-                    </p>
-                  </div>
-                  {event.description && (
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {event.description}
-                    </p>
-                  )}
-                </div>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         )}
 

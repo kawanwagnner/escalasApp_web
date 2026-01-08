@@ -2,8 +2,7 @@ import { Layout } from "../components/layout/Layout";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Mail, Check, X, Clock, Calendar } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatDate } from "../utils/dateHelpers";
 import { useAuth } from "../context/AuthContext";
 import { useMyInvites, useAcceptInvite, useDeclineInvite } from "../hooks";
 
@@ -110,9 +109,7 @@ export default function Convites() {
                         )}
                         <span className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
-                          {format(new Date(convite.created_at), "dd/MM/yyyy", {
-                            locale: ptBR,
-                          })}
+                          {formatDate(convite.created_at, "short")}
                         </span>
                       </div>
                     </div>
@@ -160,9 +157,7 @@ export default function Convites() {
                       </span>
                     </div>
                     <span className="text-sm text-gray-500">
-                      {format(new Date(convite.created_at), "dd/MM/yyyy", {
-                        locale: ptBR,
-                      })}
+                      {formatDate(convite.created_at, "short")}
                     </span>
                   </div>
                 </Card>

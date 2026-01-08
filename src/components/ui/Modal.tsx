@@ -1,6 +1,5 @@
 import React, { type ReactNode, useEffect } from "react";
 import { X } from "lucide-react";
-import { Button } from "./Button";
 
 interface ModalProps {
   isOpen: boolean;
@@ -34,27 +33,25 @@ export const Modal: React.FC<ModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <div
-          className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+          className="fixed inset-0 transition-opacity bg-black/50"
           onClick={onClose}
         />
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-              <Button
-                variant="ghost"
-                size="sm"
+        <div className="relative z-10 inline-block align-bottom bg-white rounded-xl text-left overflow-visible shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full">
+          <div className="bg-white px-5 pt-5 pb-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-900">{title}</h3>
+              <button
                 onClick={onClose}
-                className="p-1!"
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="h-5 w-5" />
-              </Button>
+              </button>
             </div>
-            <div>{children}</div>
+            <div className="max-h-[60vh] overflow-y-auto overflow-x-visible">{children}</div>
           </div>
           {footer && (
-            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
+            <div className="bg-gray-50 px-5 py-4 sm:px-6 flex flex-row-reverse gap-2 border-t border-gray-100">
               {footer}
             </div>
           )}

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Input } from "../../components/ui/Input";
@@ -35,6 +35,15 @@ export const Login: React.FC = () => {
 
   const { signIn } = useAuth();
   const navigate = useNavigate();
+
+  // Detecta token de recuperação de senha na URL e redireciona
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes("type=recovery")) {
+      // Redireciona para update-password mantendo o hash com o token
+      navigate("/update-password" + hash, { replace: true });
+    }
+  }, [navigate]);
 
   // Atualiza campo e valida
   const handleChange =

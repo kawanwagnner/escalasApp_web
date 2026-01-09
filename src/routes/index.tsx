@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "../context/AuthContext";
 import { ProtectedRoute } from "../components/auth/ProtectedRoute";
+import { RecoveryRedirect } from "../components/auth/RecoveryRedirect";
 
 // Auth Pages
 import { Login } from "../pages/auth/Login";
@@ -24,90 +25,92 @@ export const AppRoutes: React.FC = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/update-password" element={<UpdatePassword />} />
+        <RecoveryRedirect>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/update-password" element={<UpdatePassword />} />
 
-          {/* Protected Routes */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/ministerios"
-            element={
-              <ProtectedRoute>
-                <Ministerios />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/minhas-escalas"
-            element={
-              <ProtectedRoute>
-                <MinhasEscalas />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/convites"
-            element={
-              <ProtectedRoute>
-                <Convites />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/membros"
-            element={
-              <ProtectedRoute>
-                <Membros />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/perfil"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/comunicados"
-            element={
-              <ProtectedRoute>
-                <Comunicados />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/eventos"
-            element={
-              <ProtectedRoute>
-                <Eventos />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/agenda"
-            element={
-              <ProtectedRoute>
-                <Agenda />
-              </ProtectedRoute>
-            }
-          />
+            {/* Protected Routes */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ministerios"
+              element={
+                <ProtectedRoute>
+                  <Ministerios />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/minhas-escalas"
+              element={
+                <ProtectedRoute>
+                  <MinhasEscalas />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/convites"
+              element={
+                <ProtectedRoute>
+                  <Convites />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/membros"
+              element={
+                <ProtectedRoute>
+                  <Membros />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/perfil"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/comunicados"
+              element={
+                <ProtectedRoute>
+                  <Comunicados />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/eventos"
+              element={
+                <ProtectedRoute>
+                  <Eventos />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/agenda"
+              element={
+                <ProtectedRoute>
+                  <Agenda />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </RecoveryRedirect>
       </AuthProvider>
     </BrowserRouter>
   );

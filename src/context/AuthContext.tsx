@@ -3,10 +3,12 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useCallback,
   type ReactNode,
 } from "react";
 import type { User } from "../types";
 import { authService } from "../services/auth.service";
+import { queryClient } from "../lib/reactQuery";
 
 interface AuthContextType {
   user: User | null;
@@ -25,37 +27,81 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem("access_token");
+      const refreshToken = localStorage.getItem("refresh_token");
+
       if (token) {
-        const currentUser = await authService.getCurrentUser();
-        setUser(currentUser);
+        try {
+          // Tenta buscar o usuário atual com o token existente
+          const currentUser = await authService.getCurrentUser();
+          setUser(currentUser);
+        } catch (error) {
+          // Se falhar e tiver refresh token, tenta renovar
+          if (refreshToken) {
+            try {
+              const response = await authService.refreshSession(refreshToken);
+              localStorage.setItem("access_token", response.access_token);
+              localStorage.setItem("refresh_token", response.refresh_token);
+              localStorage.setItem("user", JSON.stringify(response.user));
+              setUser(response.user);
+            } catch (refreshError) {
+              // Refresh falhou, limpa tudo
+              clearAuthData();
+            }
+          } else {
+            clearAuthData();
+          }
+        }
+      } else if (refreshToken) {
+        // Não tem access_token mas tem refresh_token, tenta renovar
+        try {
+          const response = await authService.refreshSession(refreshToken);
+          localStorage.setItem("access_token", response.access_token);
+          localStorage.setItem("refresh_token", response.refresh_token);
+          localStorage.setItem("user", JSON.stringify(response.user));
+          setUser(response.user);
+        } catch (refreshError) {
+          clearAuthData();
+        }
       }
     } catch (error) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("user");
+      clearAuthData();
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const clearAuthData = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user");
+    setUser(null);
   };
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const signIn = async (email: string, password: string) => {
     const response = await authService.signIn(email, password);
     localStorage.setItem("access_token", response.access_token);
+    localStorage.setItem("refresh_token", response.refresh_token);
     localStorage.setItem("user", JSON.stringify(response.user));
     setUser(response.user);
+    // Invalida todas as queries para forçar refetch com o novo usuário
+    await queryClient.invalidateQueries();
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const response = await authService.signUp(email, password, fullName);
     localStorage.setItem("access_token", response.access_token);
+    localStorage.setItem("refresh_token", response.refresh_token);
     localStorage.setItem("user", JSON.stringify(response.user));
     setUser(response.user);
+    // Invalida todas as queries para forçar refetch com o novo usuário
+    await queryClient.invalidateQueries();
   };
 
   const signOut = async () => {
@@ -63,8 +109,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       await authService.signOut();
     } finally {
       localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
       setUser(null);
+      // Limpa todo o cache de queries
+      queryClient.clear();
     }
   };
 

@@ -7,7 +7,30 @@ export const authService = {
       email,
       password,
     });
-    return response.data;
+    
+    const authData = response.data;
+    
+    // Busca o perfil completo do usuário
+    const profileResponse = await api.get(`/rest/v1/profiles?id=eq.${authData.user.id}&select=*`, {
+      headers: {
+        Authorization: `Bearer ${authData.access_token}`,
+      },
+    });
+    const profile = profileResponse.data[0];
+    
+    // Mescla os dados do auth com o perfil
+    return {
+      ...authData,
+      user: {
+        id: authData.user.id,
+        email: profile?.email || authData.user.email,
+        full_name: profile?.full_name || authData.user.user_metadata?.full_name || '',
+        role: profile?.role || 'member',
+        phone: profile?.phone,
+        created_at: profile?.created_at || authData.user.created_at,
+        updated_at: profile?.updated_at || authData.user.updated_at,
+      },
+    };
   },
 
   async signUp(email: string, password: string, fullName: string): Promise<AuthResponse> {
@@ -23,6 +46,36 @@ export const authService = {
 
   async signOut(): Promise<void> {
     await api.post('/auth/v1/logout');
+  },
+
+  async refreshSession(refreshToken: string): Promise<AuthResponse> {
+    const response = await api.post('/auth/v1/token?grant_type=refresh_token', {
+      refresh_token: refreshToken,
+    });
+    
+    const authData = response.data;
+    
+    // Busca o perfil completo do usuário
+    const profileResponse = await api.get(`/rest/v1/profiles?id=eq.${authData.user.id}&select=*`, {
+      headers: {
+        Authorization: `Bearer ${authData.access_token}`,
+      },
+    });
+    const profile = profileResponse.data[0];
+    
+    // Mescla os dados do auth com o perfil
+    return {
+      ...authData,
+      user: {
+        id: authData.user.id,
+        email: profile?.email || authData.user.email,
+        full_name: profile?.full_name || authData.user.user_metadata?.full_name || '',
+        role: profile?.role || 'member',
+        phone: profile?.phone,
+        created_at: profile?.created_at || authData.user.created_at,
+        updated_at: profile?.updated_at || authData.user.updated_at,
+      },
+    };
   },
 
   async resetPassword(email: string): Promise<void> {

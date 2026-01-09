@@ -31,7 +31,7 @@ export const Dashboard: React.FC = () => {
       // A data pode estar no slot ou no schedule
       const date = slot?.date || schedule?.date || "";
       const title = slot?.title || schedule?.title || "Escala";
-      
+
       return { ...assignment, _date: date, _title: title };
     })
     .sort((a, b) => {
@@ -58,14 +58,18 @@ export const Dashboard: React.FC = () => {
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Olá, {user?.full_name || "Usuário"}! 👋
+            Olá, {user?.full_name?.split(" ")[0] || "Usuário"}! 👋
           </h1>
           <p className="text-gray-600">Bem-vindo ao seu painel de controle</p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card hover className="border-l-4 border-blue-600">
+          <Card
+            hover
+            className="border-l-4 border-blue-600 cursor-pointer transition-transform hover:scale-105"
+            onClick={() => navigate("/ministerios")}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Ministérios</p>
@@ -77,7 +81,11 @@ export const Dashboard: React.FC = () => {
             </div>
           </Card>
 
-          <Card hover className="border-l-4 border-green-600">
+          <Card
+            hover
+            className="border-l-4 border-green-600 cursor-pointer transition-transform hover:scale-105"
+            onClick={() => navigate("/minhas-escalas")}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Minhas Escalas</p>
@@ -89,7 +97,11 @@ export const Dashboard: React.FC = () => {
             </div>
           </Card>
 
-          <Card hover className="border-l-4 border-purple-600">
+          <Card
+            hover
+            className="border-l-4 border-purple-600 cursor-pointer transition-transform hover:scale-105"
+            onClick={() => navigate("/convites")}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Convites Pendentes</p>
@@ -101,7 +113,11 @@ export const Dashboard: React.FC = () => {
             </div>
           </Card>
 
-          <Card hover className="border-l-4 border-orange-600">
+          <Card
+            hover
+            className="border-l-4 border-orange-600 cursor-pointer transition-transform hover:scale-105"
+            onClick={() => navigate("/perfil")}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Tipo de Perfil</p>
@@ -131,12 +147,14 @@ export const Dashboard: React.FC = () => {
                 const schedule = slot?.schedule;
                 const date = assignment._date;
                 const title = assignment._title;
-                
+
                 const escalaDate = date ? new Date(date + "T00:00:00") : null;
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const isPast = escalaDate ? escalaDate < today : false;
-                const isToday = escalaDate ? escalaDate.getTime() === today.getTime() : false;
+                const isToday = escalaDate
+                  ? escalaDate.getTime() === today.getTime()
+                  : false;
 
                 return (
                   <div
@@ -151,20 +169,24 @@ export const Dashboard: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-center gap-4 flex-1">
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                        isPast 
-                          ? "bg-gray-200" 
-                          : isToday 
-                          ? "bg-red-100" 
-                          : "bg-blue-100"
-                      }`}>
-                        <Calendar className={`h-6 w-6 ${
-                          isPast 
-                            ? "text-gray-500" 
-                            : isToday 
-                            ? "text-red-600" 
-                            : "text-blue-600"
-                        }`} />
+                      <div
+                        className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                          isPast
+                            ? "bg-gray-200"
+                            : isToday
+                            ? "bg-red-100"
+                            : "bg-blue-100"
+                        }`}
+                      >
+                        <Calendar
+                          className={`h-6 w-6 ${
+                            isPast
+                              ? "text-gray-500"
+                              : isToday
+                              ? "text-red-600"
+                              : "text-blue-600"
+                          }`}
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
@@ -190,16 +212,23 @@ export const Dashboard: React.FC = () => {
                         {slot?.start_time && (
                           <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
                             <Clock className="h-3 w-3" />
-                            {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                            {formatTime(slot.start_time)} -{" "}
+                            {formatTime(slot.end_time)}
                           </p>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <p className={`text-sm font-medium ${
-                          isPast ? "text-gray-500" : isToday ? "text-red-600" : "text-blue-600"
-                        }`}>
+                        <p
+                          className={`text-sm font-medium ${
+                            isPast
+                              ? "text-gray-500"
+                              : isToday
+                              ? "text-red-600"
+                              : "text-blue-600"
+                          }`}
+                        >
                           {date ? formatDate(date, "monthDay") : "Sem data"}
                         </p>
                         {date && (
@@ -213,7 +242,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                 );
               })}
-              
+
               {allAssignments.length > 5 && (
                 <button
                   onClick={() => navigate("/minhas-escalas")}

@@ -8,10 +8,12 @@ import { edgeFunctionService } from "../services/edgeFunction.service";
 import { useAnnouncements, useCreateAnnouncement } from "../hooks";
 import { formatDate } from "../utils/dateHelpers";
 import { Megaphone, Plus, Send, Loader2 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function Comunicados() {
   const { data: comunicados = [], isLoading } = useAnnouncements();
   const createAnnouncement = useCreateAnnouncement();
+  const { user } = useAuth();
 
   const [showModal, setShowModal] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
@@ -61,10 +63,12 @@ export default function Comunicados() {
             <h1 className="text-2xl font-bold text-gray-900">Comunicados</h1>
             <p className="text-gray-600">Gerencie os comunicados da igreja</p>
           </div>
-          <Button onClick={() => setShowModal(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Comunicado
-          </Button>
+          {user?.role === 'admin' && (
+            <Button onClick={() => setShowModal(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Comunicado
+            </Button>
+          )}
         </div>
 
         {/* Lista de Comunicados */}
@@ -103,21 +107,23 @@ export default function Comunicados() {
                       {comunicado.message}
                     </p>
                   </div>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleSendEmails(comunicado.id)}
-                    disabled={sending === comunicado.id}
-                  >
-                    {sending === comunicado.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4 mr-1" />
-                        Enviar
-                      </>
-                    )}
-                  </Button>
+                  {user?.role === 'admin' && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleSendEmails(comunicado.id)}
+                      disabled={sending === comunicado.id}
+                    >
+                      {sending === comunicado.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-1" />
+                          Enviar
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </Card>
             ))}

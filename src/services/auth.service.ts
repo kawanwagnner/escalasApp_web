@@ -48,4 +48,10 @@ export const authService = {
       updated_at: profile?.updated_at || authUser.updated_at,
     };
   },
+
+  async updatePassword(newPassword: string): Promise<void> {
+    await api.put('/auth/v1/user', {
+      password: newPassword,
+    });
+  },
 };

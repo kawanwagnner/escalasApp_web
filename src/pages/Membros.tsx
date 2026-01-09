@@ -1,16 +1,75 @@
 import { useState } from "react";
 import { Layout } from "../components/layout/Layout";
 import { Card } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Modal } from "../components/ui/Modal";
 import { useProfiles } from "../hooks";
-import { Users, Music, BookOpen, Search } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { authService } from "../services/auth.service";
+import { profileService } from "../services/profile.service";
+import { Users, Music, BookOpen, Search, Plus, Shield, ShieldCheck } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Membros = () => {
   const { data: membros = [], isLoading } = useProfiles();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [selectedMembro, setSelectedMembro] = useState<any>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+  });
 
   const filteredMembros = membros.filter((m) =>
     m.full_name?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleCreateMember = async () => {
+    if (!createForm.fullName || !createForm.email || !createForm.password) return;
+    
+    setIsCreating(true);
+    try {
+      await authService.signUp(createForm.email, createForm.password, createForm.fullName);
+      setShowCreateModal(false);
+      setCreateForm({ fullName: "", email: "", password: "" });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+    } catch (error: any) {
+      console.error("Erro ao cadastrar membro:", error);
+      alert(error.response?.data?.msg || "Erro ao cadastrar membro");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleToggleRole = async () => {
+    if (!selectedMembro) return;
+    
+    setIsUpdatingRole(true);
+    try {
+      const newRole = selectedMembro.role === 'admin' ? 'member' : 'admin';
+      await profileService.updateProfile(selectedMembro.id, { role: newRole });
+      setShowRoleModal(false);
+      setSelectedMembro(null);
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+    } catch (error) {
+      console.error("Erro ao atualizar role:", error);
+      alert("Erro ao atualizar permissão do membro");
+    } finally {
+      setIsUpdatingRole(false);
+    }
+  };
+
+  const openRoleModal = (membro: any) => {
+    setSelectedMembro(membro);
+    setShowRoleModal(true);
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -56,6 +115,12 @@ export const Membros = () => {
               {membros.length} membros cadastrados
             </p>
           </div>
+          {user?.role === 'admin' && (
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Membro
+            </Button>
+          )}
         </div>
 
         {/* Busca */}
@@ -128,9 +193,17 @@ export const Membros = () => {
                   {getInitials(membro.full_name)}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">
-                    {membro.full_name}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-gray-900">
+                      {membro.full_name}
+                    </h3>
+                    {membro.role === 'admin' && (
+                      <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full flex items-center gap-1">
+                        <ShieldCheck className="h-3 w-3" />
+                        Admin
+                      </span>
+                    )}
+                  </div>
                   <div className="flex gap-2 mt-1">
                     {membro.is_musician && (
                       <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full flex items-center gap-1">
@@ -146,6 +219,15 @@ export const Membros = () => {
                     )}
                   </div>
                 </div>
+                {user?.role === 'admin' && membro.id !== user.id && (
+                  <button
+                    onClick={() => openRoleModal(membro)}
+                    className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                    title="Alterar permissão"
+                  >
+                    <Shield className="h-5 w-5" />
+                  </button>
+                )}
               </div>
             </Card>
           ))}
@@ -159,6 +241,130 @@ export const Membros = () => {
             </div>
           </Card>
         )}
+
+        {/* Modal Criar Membro */}
+        <Modal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          title="Cadastrar Novo Membro"
+          footer={
+            <div className="flex gap-3">
+              <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleCreateMember} isLoading={isCreating}>
+                Cadastrar
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-4">
+            <Input
+              label="Nome completo"
+              value={createForm.fullName}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setCreateForm({ ...createForm, fullName: e.target.value })
+              }
+              placeholder="Nome do membro"
+            />
+            <Input
+              label="Email"
+              type="email"
+              value={createForm.email}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setCreateForm({ ...createForm, email: e.target.value })
+              }
+              placeholder="email@exemplo.com"
+            />
+            <Input
+              label="Senha"
+              type="password"
+              value={createForm.password}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setCreateForm({ ...createForm, password: e.target.value })
+              }
+              placeholder="Senha inicial"
+            />
+            <p className="text-sm text-gray-500">
+              O membro poderá alterar a senha depois no perfil.
+            </p>
+          </div>
+        </Modal>
+
+        {/* Modal Alterar Role */}
+        <Modal
+          isOpen={showRoleModal}
+          onClose={() => setShowRoleModal(false)}
+          title="Alterar Permissão"
+          footer={
+            <div className="flex gap-3">
+              <Button variant="secondary" onClick={() => setShowRoleModal(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleToggleRole} isLoading={isUpdatingRole}>
+                Confirmar
+              </Button>
+            </div>
+          }
+        >
+          {selectedMembro && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${getRandomColor(
+                    selectedMembro.full_name
+                  )}`}
+                >
+                  {getInitials(selectedMembro.full_name)}
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">{selectedMembro.full_name}</p>
+                  <p className="text-sm text-gray-500">{selectedMembro.email}</p>
+                </div>
+              </div>
+              
+              <div className="p-4 border rounded-lg">
+                <p className="text-sm text-gray-600 mb-2">Permissão atual:</p>
+                <p className="font-semibold flex items-center gap-2">
+                  {selectedMembro.role === 'admin' ? (
+                    <>
+                      <ShieldCheck className="h-5 w-5 text-amber-600" />
+                      <span className="text-amber-700">Administrador</span>
+                    </>
+                  ) : (
+                    <>
+                      <Users className="h-5 w-5 text-blue-600" />
+                      <span className="text-blue-700">Membro</span>
+                    </>
+                  )}
+                </p>
+              </div>
+
+              <div className="p-4 border-2 border-dashed rounded-lg bg-blue-50 border-blue-200">
+                <p className="text-sm text-gray-600 mb-2">Nova permissão:</p>
+                <p className="font-semibold flex items-center gap-2">
+                  {selectedMembro.role === 'admin' ? (
+                    <>
+                      <Users className="h-5 w-5 text-blue-600" />
+                      <span className="text-blue-700">Membro</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="h-5 w-5 text-amber-600" />
+                      <span className="text-amber-700">Administrador</span>
+                    </>
+                  )}
+                </p>
+              </div>
+
+              {selectedMembro.role !== 'admin' && (
+                <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+                  ⚠️ Administradores têm acesso total ao sistema, incluindo criar/editar ministérios, escalas, eventos e gerenciar outros membros.
+                </p>
+              )}
+            </div>
+          )}
+        </Modal>
       </div>
     </Layout>
   );

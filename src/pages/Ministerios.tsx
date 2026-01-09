@@ -6,6 +6,7 @@ import { Modal } from "../components/ui/Modal";
 import { Input } from "../components/ui/Input";
 import { slotService } from "../services/slot.service";
 import { inviteService } from "../services/invite.service";
+import { assignmentService } from "../services/assignment.service";
 import type { Schedule, Slot } from "../types";
 import { Plus, Trash2, Eye, Users, Clock, Calendar, Music, ChevronDown, ChevronUp, Info, Bell } from "lucide-react";
 import { MemberAutocomplete } from "../components/ui/MemberAutocomplete";
@@ -146,6 +147,28 @@ export const Ministerios = () => {
       }
     } catch (error) {
       console.error("Erro ao convidar membro:", error);
+    }
+  };
+
+  const handleRemoveAssignment = async (assignmentId: string) => {
+    try {
+      await assignmentService.unassignFromSlot(assignmentId);
+      if (selectedMinisterio) {
+        loadEscalas(selectedMinisterio.id);
+      }
+    } catch (error) {
+      console.error("Erro ao remover membro:", error);
+    }
+  };
+
+  const handleRemoveInvite = async (inviteId: string) => {
+    try {
+      await inviteService.deleteInvite(inviteId);
+      if (selectedMinisterio) {
+        loadEscalas(selectedMinisterio.id);
+      }
+    } catch (error) {
+      console.error("Erro ao remover convite:", error);
     }
   };
 
@@ -529,13 +552,22 @@ export const Ministerios = () => {
                           (escala as any).assignments?.map((assignment: any) => (
                             <div
                               key={assignment.id}
-                              className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 text-green-800 text-sm rounded-full"
+                              className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 text-green-800 text-sm rounded-full group"
                             >
                               <div className="w-5 h-5 bg-green-200 rounded-full flex items-center justify-center text-xs font-medium">
                                 {assignment.user?.full_name?.charAt(0)?.toUpperCase()}
                               </div>
                               {assignment.user?.full_name}
                               <span className="text-green-600 text-xs">✓</span>
+                              {user?.role === 'admin' && (
+                                <button
+                                  onClick={() => handleRemoveAssignment(assignment.id)}
+                                  className="ml-1 w-4 h-4 flex items-center justify-center text-green-600 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
+                                  title="Remover membro"
+                                >
+                                  ×
+                                </button>
+                              )}
                             </div>
                           ))
                         ) : (
@@ -559,13 +591,22 @@ export const Ministerios = () => {
                             ?.map((invite: any) => (
                               <div
                                 key={invite.id}
-                                className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-full"
+                                className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-full group"
                               >
                                 <div className="w-5 h-5 bg-yellow-200 rounded-full flex items-center justify-center text-xs font-medium">
                                   {invite.email?.charAt(0)?.toUpperCase()}
                                 </div>
                                 {invite.email}
                                 <span className="text-yellow-600 text-xs">⏳</span>
+                                {user?.role === 'admin' && (
+                                  <button
+                                    onClick={() => handleRemoveInvite(invite.id)}
+                                    className="ml-1 w-4 h-4 flex items-center justify-center text-yellow-600 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
+                                    title="Cancelar convite"
+                                  >
+                                    ×
+                                  </button>
+                                )}
                               </div>
                             ))}
                         </div>
@@ -585,13 +626,22 @@ export const Ministerios = () => {
                             ?.map((invite: any) => (
                               <div
                                 key={invite.id}
-                                className="flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200 text-red-800 text-sm rounded-full opacity-60"
+                                className="flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200 text-red-800 text-sm rounded-full opacity-60 group"
                               >
                                 <div className="w-5 h-5 bg-red-200 rounded-full flex items-center justify-center text-xs font-medium">
                                   {invite.email?.charAt(0)?.toUpperCase()}
                                 </div>
                                 {invite.email}
                                 <span className="text-red-600 text-xs">✗</span>
+                                {user?.role === 'admin' && (
+                                  <button
+                                    onClick={() => handleRemoveInvite(invite.id)}
+                                    className="ml-1 w-4 h-4 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors opacity-100"
+                                    title="Remover recusa"
+                                  >
+                                    ×
+                                  </button>
+                                )}
                               </div>
                             ))}
                         </div>

@@ -96,10 +96,12 @@ export default function Eventos() {
               Gerencie os eventos públicos da igreja
             </p>
           </div>
-          <Button onClick={openCreateModal}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Evento
-          </Button>
+          {user?.role === 'admin' && (
+            <Button onClick={openCreateModal}>
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Evento
+            </Button>
+          )}
         </div>
 
         {/* Lista de Eventos */}

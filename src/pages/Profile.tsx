@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 
-import { UserCircle, Mail, Calendar, Edit, Save } from "lucide-react";
+import { UserCircle, Mail, Calendar, Edit, Save, Lock, Eye, EyeOff } from "lucide-react";
 import { formatDate } from "../utils/dateHelpers";
-import { profileService } from "../services";
+import { profileService, authService } from "../services";
 import { Layout } from "../components/layout";
-import { Button, Card, Input } from "../components/ui";
+import { Button, Card, Input, Modal } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 
 export const Profile: React.FC = () => {
@@ -14,6 +14,42 @@ export const Profile: React.FC = () => {
   const [formData, setFormData] = useState({
     full_name: user?.full_name || "",
   });
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordError, setPasswordError] = useState("");
+
+  const handleChangePassword = async () => {
+    setPasswordError("");
+    
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+    
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError("As senhas não coincidem");
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      await authService.updatePassword(passwordForm.newPassword);
+      setShowPasswordModal(false);
+      setPasswordForm({ newPassword: "", confirmPassword: "" });
+      alert("Senha alterada com sucesso!");
+    } catch (error: any) {
+      console.error("Erro ao alterar senha:", error);
+      setPasswordError(error.response?.data?.msg || "Erro ao alterar senha");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!user) return;
@@ -154,6 +190,19 @@ export const Profile: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Botão Alterar Senha */}
+              <button
+                onClick={() => setShowPasswordModal(true)}
+                className="w-full flex items-center gap-3 p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left"
+              >
+                <Lock className="h-5 w-5 text-gray-600" />
+                <div className="flex-1">
+                  <div className="text-sm text-gray-600">Senha</div>
+                  <div className="font-medium text-gray-900">••••••••</div>
+                </div>
+                <span className="text-sm text-blue-600 font-medium">Alterar</span>
+              </button>
             </div>
           )}
         </Card>
@@ -181,6 +230,84 @@ export const Profile: React.FC = () => {
             </div>
           </div>
         </Card>
+
+        {/* Modal Alterar Senha */}
+        <Modal
+          isOpen={showPasswordModal}
+          onClose={() => {
+            setShowPasswordModal(false);
+            setPasswordForm({ newPassword: "", confirmPassword: "" });
+            setPasswordError("");
+          }}
+          title="Alterar Senha"
+          footer={
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordForm({ newPassword: "", confirmPassword: "" });
+                  setPasswordError("");
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleChangePassword} isLoading={passwordLoading}>
+                Alterar Senha
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-4">
+            <div className="relative">
+              <Input
+                label="Nova senha"
+                type={showPassword ? "text" : "password"}
+                value={passwordForm.newPassword}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setPasswordForm({ ...passwordForm, newPassword: e.target.value })
+                }
+                placeholder="Digite a nova senha"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+            
+            <div className="relative">
+              <Input
+                label="Confirmar nova senha"
+                type={showConfirmPassword ? "text" : "password"}
+                value={passwordForm.confirmPassword}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
+                }
+                placeholder="Confirme a nova senha"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
+              >
+                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+
+            {passwordError && (
+              <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+                {passwordError}
+              </p>
+            )}
+
+            <p className="text-sm text-gray-500">
+              A senha deve ter pelo menos 6 caracteres.
+            </p>
+          </div>
+        </Modal>
       </div>
     </Layout>
   );

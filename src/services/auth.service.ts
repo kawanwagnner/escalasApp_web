@@ -32,7 +32,7 @@ export const authService = {
     
     await api.post('/auth/v1/recover', { 
       email,
-      redirect_to: redirectTo,
+      redirectTo: redirectTo,
     });
   },
 

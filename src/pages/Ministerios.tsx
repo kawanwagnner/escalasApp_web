@@ -8,19 +8,7 @@ import { slotService } from "../services/slot.service";
 import { inviteService } from "../services/invite.service";
 import { assignmentService } from "../services/assignment.service";
 import type { Schedule, Slot } from "../types";
-import {
-  Plus,
-  Trash2,
-  Eye,
-  Users,
-  Clock,
-  Calendar,
-  Music,
-  ChevronDown,
-  ChevronUp,
-  Info,
-  Bell,
-} from "lucide-react";
+import { Plus, Trash2, Users, Clock, Calendar, Music } from "lucide-react";
 import { MemberAutocomplete } from "../components/ui/MemberAutocomplete";
 import { formatDate, formatTime } from "../utils/dateHelpers";
 import { useAuth } from "../context/AuthContext";
@@ -52,9 +40,7 @@ export const Ministerios = () => {
     null
   );
   const [escalas, setEscalas] = useState<Slot[]>([]);
-  const [expandedMinisterioId, setExpandedMinisterioId] = useState<
-    string | null
-  >(null);
+  const [loadingEscalas, setLoadingEscalas] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -74,11 +60,14 @@ export const Ministerios = () => {
   });
 
   const loadEscalas = async (ministerioId: string) => {
+    setLoadingEscalas(true);
     try {
       const data = await slotService.getSlotsBySchedule(ministerioId);
       setEscalas(data);
     } catch (error) {
       console.error("Erro ao carregar escalas:", error);
+    } finally {
+      setLoadingEscalas(false);
     }
   };
 
@@ -186,10 +175,11 @@ export const Ministerios = () => {
     }
   };
 
-  const viewEscalas = async (ministerio: Schedule) => {
+  const viewEscalas = (ministerio: Schedule) => {
     setSelectedMinisterio(ministerio);
-    await loadEscalas(ministerio.id);
-    setShowEscalasModal(true);
+    setEscalas([]); // Limpa escalas anteriores
+    setShowEscalasModal(true); // Abre o modal imediatamente
+    loadEscalas(ministerio.id); // Carrega em background
   };
 
   const getMinisterioIcon = (title: string) => {
@@ -202,11 +192,78 @@ export const Ministerios = () => {
     return "⛪";
   };
 
+  // Skeleton para os cards de ministérios
+  const MinisterioSkeleton = () => (
+    <div className="bg-white rounded-xl shadow-lg p-6 animate-pulse">
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+          <div className="flex-1">
+            <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-gray-200 rounded"></div>
+          <div className="h-4 bg-gray-200 rounded w-32"></div>
+        </div>
+        <div className="flex gap-2">
+          <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+          <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+        </div>
+        <div className="pt-3 border-t border-gray-200">
+          <div className="h-3 bg-gray-200 rounded w-36"></div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Skeleton para as escalas no modal
+  const EscalaSkeleton = () => (
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden animate-pulse">
+      <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+            <div>
+              <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-20"></div>
+            </div>
+          </div>
+          <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+        </div>
+      </div>
+      <div className="p-4 space-y-4">
+        <div className="flex gap-4">
+          <div className="h-8 bg-gray-200 rounded-lg w-32"></div>
+          <div className="h-8 bg-gray-200 rounded-lg w-24"></div>
+        </div>
+        <div className="space-y-2">
+          <div className="h-3 bg-gray-200 rounded w-20"></div>
+          <div className="flex gap-2">
+            <div className="h-8 bg-gray-200 rounded-full w-28"></div>
+            <div className="h-8 bg-gray-200 rounded-full w-32"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   if (isLoading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="h-8 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-64 animate-pulse"></div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <MinisterioSkeleton />
+            <MinisterioSkeleton />
+            <MinisterioSkeleton />
+          </div>
         </div>
       </Layout>
     );
@@ -234,140 +291,70 @@ export const Ministerios = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {ministerios.map((ministerio) => {
-            const isExpanded = expandedMinisterioId === ministerio.id;
-
-            return (
-              <Card
-                key={ministerio.id}
-                hover
-                className="cursor-pointer"
-                onClick={() =>
-                  setExpandedMinisterioId(isExpanded ? null : ministerio.id)
-                }
-              >
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">
-                        {getMinisterioIcon(ministerio.title)}
-                      </span>
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {ministerio.title}
-                        </h3>
-                        <p className="text-gray-600 text-sm">
-                          {ministerio.description || "Sem descrição"}
-                        </p>
-                      </div>
-                    </div>
-                    {isExpanded ? (
-                      <ChevronUp className="h-5 w-5 text-gray-400" />
-                    ) : (
-                      <ChevronDown className="h-5 w-5 text-gray-400" />
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 text-blue-600">
-                    <Calendar className="h-4 w-4" />
-                    <span className="text-sm font-medium">
-                      {formatDate(ministerio.date, "long")}
+          {ministerios.map((ministerio) => (
+            <Card
+              key={ministerio.id}
+              hover
+              className="cursor-pointer transition-transform hover:scale-[1.02]"
+              onClick={() => viewEscalas(ministerio)}
+            >
+              <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">
+                      {getMinisterioIcon(ministerio.title)}
                     </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {ministerio.notify_24h && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                        🔔 24h
-                      </span>
-                    )}
-                    {ministerio.notify_48h && (
-                      <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
-                        🔔 48h
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Área expandida com detalhes */}
-                  {isExpanded && (
-                    <div className="pt-4 border-t border-gray-200">
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                          <Info className="h-4 w-4 text-blue-600" />
-                          Detalhes do Ministério
-                        </h4>
-
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <Calendar className="h-4 w-4 text-gray-400" />
-                            <span className="font-medium">Data Base:</span>
-                            {formatDate(ministerio.date, "full")}
-                          </div>
-
-                          {ministerio.description && (
-                            <div className="flex items-start gap-2 text-gray-600">
-                              <Info className="h-4 w-4 text-gray-400 mt-0.5" />
-                              <span className="font-medium">Descrição:</span>
-                              {ministerio.description}
-                            </div>
-                          )}
-
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <Bell className="h-4 w-4 text-gray-400" />
-                            <span className="font-medium">Notificações:</span>
-                            <span className="flex gap-1">
-                              {ministerio.notify_24h && (
-                                <span className="text-blue-600">24h</span>
-                              )}
-                              {ministerio.notify_24h &&
-                                ministerio.notify_48h && <span>,</span>}
-                              {ministerio.notify_48h && (
-                                <span className="text-purple-600">48h</span>
-                              )}
-                              {!ministerio.notify_24h &&
-                                !ministerio.notify_48h && (
-                                  <span className="text-gray-400">Nenhuma</span>
-                                )}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <Clock className="h-4 w-4 text-gray-400" />
-                            <span className="font-medium">Criado em:</span>
-                            {formatDate(ministerio.created_at, "short")}
-                          </div>
-                        </div>
-                      </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {ministerio.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm">
+                        {ministerio.description || "Sem descrição"}
+                      </p>
                     </div>
-                  )}
-
-                  <div
-                    className="flex gap-2 pt-3 border-t border-gray-200"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => viewEscalas(ministerio)}
-                      className="flex-1"
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      Ver Escalas
-                    </Button>
-                    {user?.role === "admin" && (
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => handleDeleteMinisterio(ministerio.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
                 </div>
-              </Card>
-            );
-          })}
+
+                <div className="flex items-center gap-2 text-blue-600">
+                  <Calendar className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    {formatDate(ministerio.date, "long")}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {ministerio.notify_24h && (
+                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                      🔔 24h
+                    </span>
+                  )}
+                  {ministerio.notify_48h && (
+                    <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                      🔔 48h
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                  <span className="text-xs text-gray-400 italic">
+                    {"=>"} Clique para ver detalhes
+                  </span>
+                  {user?.role === "admin" && (
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteMinisterio(ministerio.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
 
         {ministerios.length === 0 && (
@@ -479,7 +466,12 @@ export const Ministerios = () => {
             </div>
           )}
 
-          {escalas.length === 0 ? (
+          {loadingEscalas ? (
+            <div className="space-y-4">
+              <EscalaSkeleton />
+              <EscalaSkeleton />
+            </div>
+          ) : escalas.length === 0 ? (
             <div className="text-center py-8">
               <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500">
@@ -540,7 +532,7 @@ export const Ministerios = () => {
                     {/* Descrição com links clicáveis */}
                     {escala.description && (
                       <p
-                        className="text-sm text-gray-600 mb-4 whitespace-pre-wrap break-words overflow-wrap-anywhere"
+                        className="text-sm text-gray-600 mb-4 whitespace-pre-wrap wrap-break-words overflow-wrap-anywhere"
                         dangerouslySetInnerHTML={{
                           __html: escala.description.replace(
                             /(https?:\/\/[^\s]+)/g,

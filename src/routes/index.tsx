@@ -7,6 +7,7 @@ import { ProtectedRoute } from "../components/auth/ProtectedRoute";
 import { Login } from "../pages/auth/Login";
 import { Register } from "../pages/auth/Register";
 import { ResetPassword } from "../pages/auth/ResetPassword";
+import { UpdatePassword } from "../pages/auth/UpdatePassword";
 
 // Main Pages
 import { Dashboard } from "../pages/Dashboard";
@@ -28,6 +29,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/update-password" element={<UpdatePassword />} />
 
           {/* Protected Routes */}
           <Route

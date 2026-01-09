@@ -96,7 +96,7 @@ export default function Eventos() {
               Gerencie os eventos públicos da igreja
             </p>
           </div>
-          {user?.role === 'admin' && (
+          {user?.role === "admin" && (
             <Button onClick={openCreateModal}>
               <Plus className="w-4 h-4 mr-2" />
               Novo Evento
@@ -126,16 +126,23 @@ export default function Eventos() {
               const isPastEvent = eventDate < today;
 
               return (
-                <Card key={event.id} className={isPastEvent ? "opacity-60" : ""}>
+                <Card
+                  key={event.id}
+                  className={isPastEvent ? "opacity-60" : ""}
+                >
                   <div className="space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                          isPastEvent ? "bg-gray-100" : "bg-purple-100"
-                        }`}>
-                          <CalendarDays className={`w-6 h-6 ${
-                            isPastEvent ? "text-gray-400" : "text-purple-600"
-                          }`} />
+                        <div
+                          className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                            isPastEvent ? "bg-gray-100" : "bg-purple-100"
+                          }`}
+                        >
+                          <CalendarDays
+                            className={`w-6 h-6 ${
+                              isPastEvent ? "text-gray-400" : "text-purple-600"
+                            }`}
+                          />
                         </div>
                         {isPastEvent && (
                           <span className="px-2.5 py-1 bg-gray-200 text-gray-600 text-xs font-semibold rounded-full">
@@ -143,28 +150,32 @@ export default function Eventos() {
                           </span>
                         )}
                       </div>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => openEditModal(event)}
-                          className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(event.id)}
-                          className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      {user?.role === "admin" && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => openEditModal(event)}
+                            className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(event.id)}
+                            className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">
                         {event.title}
                       </h3>
-                      <p className={`text-sm font-medium ${
-                        isPastEvent ? "text-gray-500" : "text-indigo-600"
-                      }`}>
+                      <p
+                        className={`text-sm font-medium ${
+                          isPastEvent ? "text-gray-500" : "text-indigo-600"
+                        }`}
+                      >
                         {formatDate(event.date, "weekday")}
                       </p>
                     </div>

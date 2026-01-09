@@ -8,7 +8,19 @@ import { slotService } from "../services/slot.service";
 import { inviteService } from "../services/invite.service";
 import { assignmentService } from "../services/assignment.service";
 import type { Schedule, Slot } from "../types";
-import { Plus, Trash2, Eye, Users, Clock, Calendar, Music, ChevronDown, ChevronUp, Info, Bell } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Eye,
+  Users,
+  Clock,
+  Calendar,
+  Music,
+  ChevronDown,
+  ChevronUp,
+  Info,
+  Bell,
+} from "lucide-react";
 import { MemberAutocomplete } from "../components/ui/MemberAutocomplete";
 import { formatDate, formatTime } from "../utils/dateHelpers";
 import { useAuth } from "../context/AuthContext";
@@ -40,7 +52,9 @@ export const Ministerios = () => {
     null
   );
   const [escalas, setEscalas] = useState<Slot[]>([]);
-  const [expandedMinisterioId, setExpandedMinisterioId] = useState<string | null>(null);
+  const [expandedMinisterioId, setExpandedMinisterioId] = useState<
+    string | null
+  >(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -208,7 +222,7 @@ export const Ministerios = () => {
               Gerencie os ministérios e suas escalas
             </p>
           </div>
-          {user?.role === 'admin' && (
+          {user?.role === "admin" && (
             <Button
               onClick={() => setShowModal(true)}
               className="flex items-center gap-2"
@@ -222,13 +236,15 @@ export const Ministerios = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {ministerios.map((ministerio) => {
             const isExpanded = expandedMinisterioId === ministerio.id;
-            
+
             return (
-              <Card 
-                key={ministerio.id} 
+              <Card
+                key={ministerio.id}
                 hover
                 className="cursor-pointer"
-                onClick={() => setExpandedMinisterioId(isExpanded ? null : ministerio.id)}
+                onClick={() =>
+                  setExpandedMinisterioId(isExpanded ? null : ministerio.id)
+                }
               >
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
@@ -280,14 +296,14 @@ export const Ministerios = () => {
                           <Info className="h-4 w-4 text-blue-600" />
                           Detalhes do Ministério
                         </h4>
-                        
+
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center gap-2 text-gray-600">
                             <Calendar className="h-4 w-4 text-gray-400" />
                             <span className="font-medium">Data Base:</span>
                             {formatDate(ministerio.date, "full")}
                           </div>
-                          
+
                           {ministerio.description && (
                             <div className="flex items-start gap-2 text-gray-600">
                               <Info className="h-4 w-4 text-gray-400 mt-0.5" />
@@ -300,10 +316,18 @@ export const Ministerios = () => {
                             <Bell className="h-4 w-4 text-gray-400" />
                             <span className="font-medium">Notificações:</span>
                             <span className="flex gap-1">
-                              {ministerio.notify_24h && <span className="text-blue-600">24h</span>}
-                              {ministerio.notify_24h && ministerio.notify_48h && <span>,</span>}
-                              {ministerio.notify_48h && <span className="text-purple-600">48h</span>}
-                              {!ministerio.notify_24h && !ministerio.notify_48h && <span className="text-gray-400">Nenhuma</span>}
+                              {ministerio.notify_24h && (
+                                <span className="text-blue-600">24h</span>
+                              )}
+                              {ministerio.notify_24h &&
+                                ministerio.notify_48h && <span>,</span>}
+                              {ministerio.notify_48h && (
+                                <span className="text-purple-600">48h</span>
+                              )}
+                              {!ministerio.notify_24h &&
+                                !ministerio.notify_48h && (
+                                  <span className="text-gray-400">Nenhuma</span>
+                                )}
                             </span>
                           </div>
 
@@ -317,7 +341,7 @@ export const Ministerios = () => {
                     </div>
                   )}
 
-                  <div 
+                  <div
                     className="flex gap-2 pt-3 border-t border-gray-200"
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -330,7 +354,7 @@ export const Ministerios = () => {
                       <Eye className="h-4 w-4 mr-1" />
                       Ver Escalas
                     </Button>
-                    {user?.role === 'admin' && (
+                    {user?.role === "admin" && (
                       <Button
                         size="sm"
                         variant="danger"
@@ -356,7 +380,7 @@ export const Ministerios = () => {
               <p className="text-gray-600 mb-6">
                 Comece criando seu primeiro ministério (ex: Louvor, Mídia)
               </p>
-              {user?.role === 'admin' && (
+              {user?.role === "admin" && (
                 <Button onClick={() => setShowModal(true)}>
                   <Plus className="h-5 w-5 mr-2" />
                   Criar Primeiro Ministério
@@ -440,9 +464,9 @@ export const Ministerios = () => {
         isOpen={showEscalasModal}
         onClose={() => setShowEscalasModal(false)}
         title={`Escalas - ${selectedMinisterio?.title}`}
-      >  
+      >
         <div className="space-y-4">
-          {user?.role === 'admin' && (
+          {user?.role === "admin" && (
             <div className="flex justify-end">
               <Button
                 size="sm"
@@ -482,7 +506,10 @@ export const Ministerios = () => {
                           </h4>
                           <div className="flex items-center gap-2 text-xs text-gray-500">
                             <Clock className="h-3 w-3" />
-                            <span>{formatTime(escala.start_time)} - {formatTime(escala.end_time)}</span>
+                            <span>
+                              {formatTime(escala.start_time)} -{" "}
+                              {formatTime(escala.end_time)}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -496,7 +523,7 @@ export const Ministerios = () => {
                         >
                           {escala.mode === "manual" ? "Manual" : "Automático"}
                         </span>
-                        {user?.role === 'admin' && (
+                        {user?.role === "admin" && (
                           <button
                             onClick={() => handleDeleteEscala(escala.id)}
                             className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
@@ -512,13 +539,13 @@ export const Ministerios = () => {
                   <div className="p-4">
                     {/* Descrição com links clicáveis */}
                     {escala.description && (
-                      <p 
-                        className="text-sm text-gray-600 mb-4 whitespace-pre-wrap"
+                      <p
+                        className="text-sm text-gray-600 mb-4 whitespace-pre-wrap break-words overflow-wrap-anywhere"
                         dangerouslySetInnerHTML={{
                           __html: escala.description.replace(
                             /(https?:\/\/[^\s]+)/g,
-                            '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline">$1</a>'
-                          )
+                            '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline break-all">$1</a>'
+                          ),
                         }}
                       />
                     )}
@@ -528,14 +555,22 @@ export const Ministerios = () => {
                       <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
                         <Users className="h-4 w-4 text-gray-500" />
                         <span className="text-sm font-medium text-gray-700">
-                          {(escala as any).assignments?.length || 0} / {escala.capacity} vagas confirmadas
+                          {(escala as any).assignments?.length || 0} /{" "}
+                          {escala.capacity} vagas confirmadas
                         </span>
                       </div>
-                      {(escala as any).invites?.filter((i: any) => i.status === 'pending')?.length > 0 && (
+                      {(escala as any).invites?.filter(
+                        (i: any) => i.status === "pending"
+                      )?.length > 0 && (
                         <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 rounded-lg">
                           <Clock className="h-4 w-4 text-yellow-600" />
                           <span className="text-sm font-medium text-yellow-700">
-                            {(escala as any).invites?.filter((i: any) => i.status === 'pending')?.length} pendentes
+                            {
+                              (escala as any).invites?.filter(
+                                (i: any) => i.status === "pending"
+                              )?.length
+                            }{" "}
+                            pendentes
                           </span>
                         </div>
                       )}
@@ -549,27 +584,35 @@ export const Ministerios = () => {
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {(escala as any).assignments?.length > 0 ? (
-                          (escala as any).assignments?.map((assignment: any) => (
-                            <div
-                              key={assignment.id}
-                              className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 text-green-800 text-sm rounded-full group"
-                            >
-                              <div className="w-5 h-5 bg-green-200 rounded-full flex items-center justify-center text-xs font-medium">
-                                {assignment.user?.full_name?.charAt(0)?.toUpperCase()}
+                          (escala as any).assignments?.map(
+                            (assignment: any) => (
+                              <div
+                                key={assignment.id}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 text-green-800 text-sm rounded-full group"
+                              >
+                                <div className="w-5 h-5 bg-green-200 rounded-full flex items-center justify-center text-xs font-medium">
+                                  {assignment.user?.full_name
+                                    ?.charAt(0)
+                                    ?.toUpperCase()}
+                                </div>
+                                {assignment.user?.full_name}
+                                <span className="text-green-600 text-xs">
+                                  ✓
+                                </span>
+                                {user?.role === "admin" && (
+                                  <button
+                                    onClick={() =>
+                                      handleRemoveAssignment(assignment.id)
+                                    }
+                                    className="ml-1 w-4 h-4 flex items-center justify-center text-green-600 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
+                                    title="Remover membro"
+                                  >
+                                    ×
+                                  </button>
+                                )}
                               </div>
-                              {assignment.user?.full_name}
-                              <span className="text-green-600 text-xs">✓</span>
-                              {user?.role === 'admin' && (
-                                <button
-                                  onClick={() => handleRemoveAssignment(assignment.id)}
-                                  className="ml-1 w-4 h-4 flex items-center justify-center text-green-600 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
-                                  title="Remover membro"
-                                >
-                                  ×
-                                </button>
-                              )}
-                            </div>
-                          ))
+                            )
+                          )
                         ) : (
                           <p className="text-sm text-gray-400 italic">
                             Nenhum membro confirmado ainda
@@ -579,15 +622,23 @@ export const Ministerios = () => {
                     </div>
 
                     {/* Convites Pendentes */}
-                    {(escala as any).invites?.filter((i: any) => i.status === 'pending')?.length > 0 && (
+                    {(escala as any).invites?.filter(
+                      (i: any) => i.status === "pending"
+                    )?.length > 0 && (
                       <div className="space-y-3 mb-4">
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                           <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                          Pendentes ({(escala as any).invites?.filter((i: any) => i.status === 'pending')?.length})
+                          Pendentes (
+                          {
+                            (escala as any).invites?.filter(
+                              (i: any) => i.status === "pending"
+                            )?.length
+                          }
+                          )
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {(escala as any).invites
-                            ?.filter((i: any) => i.status === 'pending')
+                            ?.filter((i: any) => i.status === "pending")
                             ?.map((invite: any) => (
                               <div
                                 key={invite.id}
@@ -597,10 +648,14 @@ export const Ministerios = () => {
                                   {invite.email?.charAt(0)?.toUpperCase()}
                                 </div>
                                 {invite.email}
-                                <span className="text-yellow-600 text-xs">⏳</span>
-                                {user?.role === 'admin' && (
+                                <span className="text-yellow-600 text-xs">
+                                  ⏳
+                                </span>
+                                {user?.role === "admin" && (
                                   <button
-                                    onClick={() => handleRemoveInvite(invite.id)}
+                                    onClick={() =>
+                                      handleRemoveInvite(invite.id)
+                                    }
                                     className="ml-1 w-4 h-4 flex items-center justify-center text-yellow-600 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
                                     title="Cancelar convite"
                                   >
@@ -614,15 +669,23 @@ export const Ministerios = () => {
                     )}
 
                     {/* Convites Recusados */}
-                    {(escala as any).invites?.filter((i: any) => i.status === 'declined')?.length > 0 && (
+                    {(escala as any).invites?.filter(
+                      (i: any) => i.status === "declined"
+                    )?.length > 0 && (
                       <div className="space-y-3 mb-4">
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                           <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                          Recusados ({(escala as any).invites?.filter((i: any) => i.status === 'declined')?.length})
+                          Recusados (
+                          {
+                            (escala as any).invites?.filter(
+                              (i: any) => i.status === "declined"
+                            )?.length
+                          }
+                          )
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {(escala as any).invites
-                            ?.filter((i: any) => i.status === 'declined')
+                            ?.filter((i: any) => i.status === "declined")
                             ?.map((invite: any) => (
                               <div
                                 key={invite.id}
@@ -633,9 +696,11 @@ export const Ministerios = () => {
                                 </div>
                                 {invite.email}
                                 <span className="text-red-600 text-xs">✗</span>
-                                {user?.role === 'admin' && (
+                                {user?.role === "admin" && (
                                   <button
-                                    onClick={() => handleRemoveInvite(invite.id)}
+                                    onClick={() =>
+                                      handleRemoveInvite(invite.id)
+                                    }
                                     className="ml-1 w-4 h-4 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors opacity-100"
                                     title="Remover recusa"
                                   >
@@ -649,7 +714,7 @@ export const Ministerios = () => {
                     )}
 
                     {/* Autocomplete para convidar membro - só admin */}
-                    {user?.role === 'admin' && (
+                    {user?.role === "admin" && (
                       <div className="mt-4 pt-4 border-t border-gray-100">
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                           Convidar membro
@@ -657,10 +722,20 @@ export const Ministerios = () => {
                         <MemberAutocomplete
                           members={membros}
                           excludeIds={[
-                            ...((escala as any).assignments?.map((a: any) => a.user_id) || []),
-                            ...((escala as any).invites?.map((i: any) => membros.find((m: any) => m.email === i.email)?.id).filter(Boolean) || [])
+                            ...((escala as any).assignments?.map(
+                              (a: any) => a.user_id
+                            ) || []),
+                            ...((escala as any).invites
+                              ?.map(
+                                (i: any) =>
+                                  membros.find((m: any) => m.email === i.email)
+                                    ?.id
+                              )
+                              .filter(Boolean) || []),
                           ]}
-                          onSelect={(member) => handleInviteMember(escala.id, member.email)}
+                          onSelect={(member) =>
+                            handleInviteMember(escala.id, member.email)
+                          }
                           placeholder="Buscar membro por nome ou email..."
                         />
                       </div>

@@ -26,7 +26,14 @@ export const authService = {
   },
 
   async resetPassword(email: string): Promise<void> {
-    await api.post('/auth/v1/recover', { email });
+    // Determina a URL base do site (produção ou desenvolvimento)
+    const siteUrl = window.location.origin;
+    const redirectTo = `${siteUrl}/update-password`;
+    
+    await api.post('/auth/v1/recover', { 
+      email,
+      redirect_to: redirectTo,
+    });
   },
 
   async getCurrentUser(): Promise<User> {

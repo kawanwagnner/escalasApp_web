@@ -12,6 +12,20 @@ export const api = axios.create({
   },
 });
 
+/**
+ * Cliente API público (sem interceptor de autenticação)
+ * Usado para rotas que não precisam de autenticação, como:
+ * - Recuperação de senha
+ * - Verificação de código
+ */
+export const publicApi = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'apikey': API_KEY,
+  },
+});
+
 // Flag para evitar múltiplas tentativas de refresh simultâneas
 let isRefreshing = false;
 let failedQueue: Array<{

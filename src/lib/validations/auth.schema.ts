@@ -71,6 +71,16 @@ export const updatePasswordSchema = yup.object({
     .oneOf([yup.ref("password")], messages.passwordMatch),
 });
 
+// Schema de Verificação de Código
+export const verifyCodeSchema = yup.object({
+  code: yup
+    .string()
+    .required("Digite o código de verificação")
+    .matches(/^[0-9]{6}$/, "O código deve ter 6 dígitos numéricos"),
+});
+
+export type VerifyCodeFormData = yup.InferType<typeof verifyCodeSchema>;
+
 export type UpdatePasswordFormData = yup.InferType<typeof updatePasswordSchema>;
 
 // Função auxiliar para validar campo individual

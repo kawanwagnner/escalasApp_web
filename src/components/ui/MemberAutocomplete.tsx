@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Search, Clock, User, X } from "lucide-react";
 import type { Profile } from "../../types";
@@ -24,6 +24,7 @@ export const MemberAutocomplete: React.FC<MemberAutocompleteProps> = ({
   const [recentMembers, setRecentMembers] = useState<Profile[]>([]);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [showAbove, setShowAbove] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -44,19 +45,40 @@ export const MemberAutocomplete: React.FC<MemberAutocompleteProps> = ({
     }
   }, [members]);
 
-  // Atualizar posição do dropdown
-  const updateDropdownPosition = () => {
+  // Atualizar posição do dropdown - detecta se deve mostrar acima ou abaixo
+  const updateDropdownPosition = useCallback(() => {
     if (inputRef.current) {
       const rect = inputRef.current.getBoundingClientRect();
-      setDropdownStyle({
-        position: "fixed",
-        top: rect.bottom + 4,
-        left: rect.left,
-        width: rect.width,
-        zIndex: 99999,
-      });
+      const dropdownHeight = 256; // max-h-64 = 16rem = 256px
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      // Se não há espaço suficiente abaixo E há espaço acima, mostra acima
+      const shouldShowAbove =
+        spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+      setShowAbove(shouldShowAbove);
+
+      if (shouldShowAbove) {
+        setDropdownStyle({
+          position: "fixed",
+          bottom: window.innerHeight - rect.top + 4,
+          left: rect.left,
+          width: rect.width,
+          zIndex: 99999,
+          maxHeight: Math.min(dropdownHeight, spaceAbove - 8),
+        });
+      } else {
+        setDropdownStyle({
+          position: "fixed",
+          top: rect.bottom + 4,
+          left: rect.left,
+          width: rect.width,
+          zIndex: 99999,
+          maxHeight: Math.min(dropdownHeight, spaceBelow - 8),
+        });
+      }
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -214,7 +236,7 @@ export const MemberAutocomplete: React.FC<MemberAutocompleteProps> = ({
           <div
             ref={dropdownRef}
             style={dropdownStyle}
-            className="bg-white border border-gray-200 rounded-lg shadow-2xl max-h-64 overflow-y-auto"
+            className="bg-white border border-gray-200 rounded-lg shadow-2xl overflow-y-auto"
           >
             {/* Resultados da busca */}
             {query && filteredMembers.length > 0 && (

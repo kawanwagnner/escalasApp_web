@@ -194,7 +194,9 @@ export const Membros = () => {
                 <Users className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-blue-600 font-medium">Total</p>
+                <p className="text-sm text-blue-600 font-medium">
+                  Total de mebros
+                </p>
                 <p className="text-2xl font-bold text-blue-900">
                   {membros.length}
                 </p>

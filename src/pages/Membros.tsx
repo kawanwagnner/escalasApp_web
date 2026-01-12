@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -8,7 +9,9 @@ import { useProfiles } from "../hooks";
 import { useAuth } from "../context/AuthContext";
 import { authService } from "../services/auth.service";
 import { profileService } from "../services/profile.service";
+import { assignmentService } from "../services/assignment.service";
 import { showToast } from "../utils/toast";
+import { formatDate, formatTime } from "../utils/dateHelpers";
 import {
   Users,
   Music,
@@ -17,17 +20,25 @@ import {
   Plus,
   Shield,
   ShieldCheck,
+  Calendar,
+  Clock,
+  ChevronRight,
+  CalendarCheck,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Membros = () => {
   const { data: membros = [], isLoading } = useProfiles();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showEscalasModal, setShowEscalasModal] = useState(false);
   const [selectedMembro, setSelectedMembro] = useState<any>(null);
+  const [membroAssignments, setMembroAssignments] = useState<any[]>([]);
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
   const [createForm, setCreateForm] = useState({
@@ -88,6 +99,26 @@ export const Membros = () => {
   const openRoleModal = (membro: any) => {
     setSelectedMembro(membro);
     setShowRoleModal(true);
+  };
+
+  const openEscalasModal = async (membro: any) => {
+    setSelectedMembro(membro);
+    setShowEscalasModal(true);
+    setLoadingAssignments(true);
+    try {
+      const assignments = await assignmentService.getMyAssignments(membro.id);
+      setMembroAssignments(assignments);
+    } catch (error) {
+      console.error("Erro ao carregar escalas do membro:", error);
+      showToast.error("Erro ao carregar escalas");
+    } finally {
+      setLoadingAssignments(false);
+    }
+  };
+
+  const handleNavigateToMinisterio = (scheduleId: string) => {
+    setShowEscalasModal(false);
+    navigate(`/ministerios?schedule=${scheduleId}`);
   };
 
   const getInitials = (name: string) => {
@@ -206,7 +237,12 @@ export const Membros = () => {
         <h3 className="mt-7 mb-2">Membros</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredMembros.map((membro) => (
-            <Card key={membro.id} hover>
+            <Card
+              key={membro.id}
+              hover
+              className="cursor-pointer"
+              onClick={() => openEscalasModal(membro)}
+            >
               <div className="flex items-center gap-4">
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${getRandomColor(
@@ -244,7 +280,10 @@ export const Membros = () => {
                 </div>
                 {user?.role === "admin" && membro.id !== user.id && (
                   <button
-                    onClick={() => openRoleModal(membro)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openRoleModal(membro);
+                    }}
                     className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                     title="Alterar permissão"
                   >
@@ -396,6 +435,99 @@ export const Membros = () => {
                   criar/editar ministérios, escalas, eventos e gerenciar outros
                   membros.
                 </p>
+              )}
+            </div>
+          )}
+        </Modal>
+
+        {/* Modal Escalas do Membro */}
+        <Modal
+          isOpen={showEscalasModal}
+          onClose={() => {
+            setShowEscalasModal(false);
+            setMembroAssignments([]);
+          }}
+          title={`Escalas de ${selectedMembro?.full_name || ""}`}
+        >
+          {selectedMembro && (
+            <div className="space-y-4">
+              {/* Header com info do membro */}
+              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${getRandomColor(
+                    selectedMembro.full_name
+                  )}`}
+                >
+                  {getInitials(selectedMembro.full_name)}
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">
+                    {selectedMembro.full_name}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {selectedMembro.email}
+                  </p>
+                </div>
+              </div>
+
+              {/* Lista de escalas */}
+              {loadingAssignments ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : membroAssignments.length === 0 ? (
+                <div className="text-center py-8">
+                  <CalendarCheck className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">
+                    Este membro não está em nenhuma escala
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-gray-600">
+                    {membroAssignments.length}{" "}
+                    {membroAssignments.length === 1 ? "escala" : "escalas"}
+                  </p>
+                  {membroAssignments.map((assignment: any) => (
+                    <div
+                      key={assignment.id}
+                      onClick={() =>
+                        handleNavigateToMinisterio(assignment.slot?.schedule_id)
+                      }
+                      className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-all group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <Calendar className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 group-hover:text-blue-700">
+                            {assignment.slot?.title || "Escala"}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {assignment.slot?.schedule?.title || "Ministério"}
+                          </p>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {formatDate(
+                                assignment.slot?.date ||
+                                  assignment.slot?.start_time,
+                                "short"
+                              )}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {formatTime(assignment.slot?.start_time)} -{" "}
+                              {formatTime(assignment.slot?.end_time)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}

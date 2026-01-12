@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -48,6 +49,7 @@ import { useCreateInvite, useDeleteInvite } from "../hooks/useInvites";
 
 export const Ministerios = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: ministerios = [], isLoading } = useSchedules();
   const { data: membros = [] } = useProfiles();
   const createSchedule = useCreateSchedule();
@@ -134,6 +136,21 @@ export const Ministerios = () => {
       setLoadingEscalas(false);
     }
   };
+
+  // Efeito para abrir ministério via parâmetro da URL
+  useEffect(() => {
+    const scheduleId = searchParams.get("schedule");
+    if (scheduleId && ministerios.length > 0 && !showEscalasModal) {
+      const ministerio = ministerios.find((m) => m.id === scheduleId);
+      if (ministerio) {
+        setSelectedMinisterio(ministerio);
+        setShowEscalasModal(true);
+        loadEscalas(ministerio.id);
+        // Limpa o parâmetro da URL após abrir
+        setSearchParams({});
+      }
+    }
+  }, [searchParams, ministerios, showEscalasModal]);
 
   const handleOpenEditMinisterio = (ministerio: Schedule) => {
     setEditingMinisterio(ministerio);

@@ -79,6 +79,7 @@ export const Ministerios = () => {
   const [escalas, setEscalas] = useState<Slot[]>([]);
   const [loadingEscalas, setLoadingEscalas] = useState(false);
   const [invitingMember, setInvitingMember] = useState(false);
+  const [selfAssigning, setSelfAssigning] = useState<string | null>(null); // ID do slot sendo inscrito
 
   // Estados para o modal de confirmação de exclusão de membro
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
@@ -571,7 +572,8 @@ export const Ministerios = () => {
   };
 
   const handleSelfAssign = async (slotId: string) => {
-    if (!user) return;
+    if (!user || selfAssigning) return;
+    setSelfAssigning(slotId);
     try {
       // Usar edge function para verificação e criação atômica
       const result = await scheduleConflictService.selfAssignWithConflictCheck(
@@ -603,6 +605,8 @@ export const Ministerios = () => {
       } else {
         showToast.error(errorMsg || "Erro ao se inscrever. Tente novamente.");
       }
+    } finally {
+      setSelfAssigning(null);
     }
   };
 
@@ -1247,10 +1251,20 @@ export const Ministerios = () => {
                               <div className="flex justify-end">
                                 <button
                                   onClick={() => handleSelfAssign(escala.id)}
-                                  className="mt-3 flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
+                                  disabled={selfAssigning === escala.id}
+                                  className="mt-3 flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
                                 >
-                                  <Plus className="h-4 w-4" />
-                                  Inscrever-me
+                                  {selfAssigning === escala.id ? (
+                                    <>
+                                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                      Verificando...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Plus className="h-4 w-4" />
+                                      Inscrever-me
+                                    </>
+                                  )}
                                 </button>
                               </div>
                             );
@@ -1400,6 +1414,8 @@ export const Ministerios = () => {
                             handleInviteMember(escala.id, member.email)
                           }
                           placeholder="Buscar membro por nome ou email..."
+                          loading={invitingMember}
+                          disabled={invitingMember}
                         />
                       </div>
                     )}

@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { Layout } from "../components/layout/Layout";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
-import { Mail, Check, X, Clock, Calendar } from "lucide-react";
+import { Mail, Check, X, Clock, Calendar, Loader2 } from "lucide-react";
 import { formatDate } from "../utils/dateHelpers";
 import { showToast } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
@@ -12,8 +13,15 @@ export default function Convites() {
   const { data: convites = [], isLoading } = useMyInvites(user?.email || "");
   const acceptInvite = useAcceptInvite();
   const declineInvite = useDeclineInvite();
+  const [processingInvite, setProcessingInvite] = useState<string | null>(null);
+  const [processingAction, setProcessingAction] = useState<
+    "accept" | "decline" | null
+  >(null);
 
   const handleAccept = async (conviteId: string) => {
+    if (processingInvite) return;
+    setProcessingInvite(conviteId);
+    setProcessingAction("accept");
     try {
       await acceptInvite.mutateAsync({ id: conviteId, userId: user!.id });
       showToast.success("Convite aceito! Você foi adicionado à escala.");
@@ -29,16 +37,25 @@ export default function Convites() {
       } else {
         showToast.error("Erro ao aceitar convite. Tente novamente.");
       }
+    } finally {
+      setProcessingInvite(null);
+      setProcessingAction(null);
     }
   };
 
   const handleDecline = async (conviteId: string) => {
+    if (processingInvite) return;
+    setProcessingInvite(conviteId);
+    setProcessingAction("decline");
     try {
       await declineInvite.mutateAsync(conviteId);
       showToast.info("Convite recusado.");
     } catch (error) {
       console.error("Erro ao recusar convite:", error);
       showToast.error("Erro ao recusar convite. Tente novamente.");
+    } finally {
+      setProcessingInvite(null);
+      setProcessingAction(null);
     }
   };
 
@@ -132,19 +149,41 @@ export default function Convites() {
                       <Button
                         size="sm"
                         onClick={() => handleAccept(convite.id)}
+                        disabled={processingInvite === convite.id}
                         className="flex items-center gap-1"
                       >
-                        <Check className="h-4 w-4" />
-                        Aceitar
+                        {processingInvite === convite.id &&
+                        processingAction === "accept" ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Verificando...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="h-4 w-4" />
+                            Aceitar
+                          </>
+                        )}
                       </Button>
                       <Button
                         size="sm"
                         variant="danger"
                         onClick={() => handleDecline(convite.id)}
+                        disabled={processingInvite === convite.id}
                         className="flex items-center gap-1"
                       >
-                        <X className="h-4 w-4" />
-                        Recusar
+                        {processingInvite === convite.id &&
+                        processingAction === "decline" ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Recusando...
+                          </>
+                        ) : (
+                          <>
+                            <X className="h-4 w-4" />
+                            Recusar
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>

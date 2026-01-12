@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Search, Clock, User, X } from "lucide-react";
+import { Search, Clock, User, X, Loader2 } from "lucide-react";
 import type { Profile } from "../../types";
 
 interface MemberAutocompleteProps {
@@ -8,6 +8,8 @@ interface MemberAutocompleteProps {
   onSelect: (member: Profile) => void;
   placeholder?: string;
   excludeIds?: string[];
+  disabled?: boolean;
+  loading?: boolean;
 }
 
 const RECENT_MEMBERS_KEY = "escalas_recent_members";
@@ -18,6 +20,8 @@ export const MemberAutocomplete: React.FC<MemberAutocompleteProps> = ({
   onSelect,
   placeholder = "Digite o nome ou email...",
   excludeIds = [],
+  disabled = false,
+  loading = false,
 }) => {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -202,7 +206,11 @@ export const MemberAutocomplete: React.FC<MemberAutocompleteProps> = ({
   return (
     <div ref={containerRef} className="relative">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        {loading ? (
+          <Loader2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-500 animate-spin" />
+        ) : (
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        )}
         <input
           ref={inputRef}
           type="text"
@@ -211,12 +219,18 @@ export const MemberAutocomplete: React.FC<MemberAutocompleteProps> = ({
             setQuery(e.target.value);
             setIsOpen(true);
           }}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => !disabled && setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className="w-full pl-10 pr-10 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 
-                     hover:bg-gray-100 focus:bg-white focus:border-blue-500 focus:ring-2 
-                     focus:ring-blue-200 transition-all outline-none"
+          placeholder={loading ? "Verificando conflitos..." : placeholder}
+          disabled={disabled || loading}
+          className={`w-full pl-10 pr-10 py-2.5 text-sm border border-gray-200 rounded-lg 
+                     ${
+                       disabled || loading
+                         ? "bg-gray-100 cursor-not-allowed"
+                         : "bg-gray-50 hover:bg-gray-100"
+                     }
+                     focus:bg-white focus:border-blue-500 focus:ring-2 
+                     focus:ring-blue-200 transition-all outline-none`}
         />
         {query && (
           <button

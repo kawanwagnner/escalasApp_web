@@ -59,7 +59,7 @@ export const Ministerios = () => {
     description: "",
     start_time: "19:00",
     end_time: "21:00",
-    mode: "manual" as "manual" | "automatic",
+    mode: "manual" as "manual" | "livre",
     capacity: 5,
   });
 
@@ -101,11 +101,21 @@ export const Ministerios = () => {
     if (!selectedMinisterio) return;
 
     try {
+      // Combina a data do ministério com os horários para criar timestamps completos
+      const baseDate =
+        selectedMinisterio.date || new Date().toISOString().split("T")[0];
+      const startTimestamp = `${baseDate}T${escalaFormData.start_time}:00`;
+      const endTimestamp = `${baseDate}T${escalaFormData.end_time}:00`;
+
       await createSlot.mutateAsync({
         schedule_id: selectedMinisterio.id,
-        theme_id: "",
-        ...escalaFormData,
-        date: selectedMinisterio.date,
+        title: escalaFormData.title,
+        description: escalaFormData.description,
+        start_time: startTimestamp,
+        end_time: endTimestamp,
+        mode: escalaFormData.mode,
+        capacity: escalaFormData.capacity,
+        date: baseDate,
       });
       setShowNovaEscalaModal(false);
       setEscalaFormData({
@@ -856,12 +866,12 @@ export const Ministerios = () => {
                 onChange={(e) =>
                   setEscalaFormData({
                     ...escalaFormData,
-                    mode: e.target.value as "manual" | "automatic",
+                    mode: e.target.value as "manual" | "livre",
                   })
                 }
               >
                 <option value="manual">Manual</option>
-                <option value="automatic">Automático</option>
+                <option value="livre">Livre</option>
               </select>
             </div>
           </div>

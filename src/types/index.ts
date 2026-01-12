@@ -54,11 +54,11 @@ export interface Theme {
 export interface Slot {
   id: string;
   schedule_id: string;
-  theme_id: string;
+  theme_id?: string | null;
   date: string;
   start_time: string;
   end_time: string;
-  mode: 'manual' | 'automatic';
+  mode: 'manual' | 'livre';
   capacity: number;
   title: string;
   description?: string;

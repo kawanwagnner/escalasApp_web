@@ -13,7 +13,11 @@ export const profileService = {
   },
 
   async updateProfile(id: string, data: Partial<Profile>): Promise<Profile> {
-    const response = await api.patch(`/rest/v1/profiles?id=eq.${id}`, data);
-    return response.data;
+    const response = await api.patch(`/rest/v1/profiles?id=eq.${id}`, data, {
+      headers: {
+        'Prefer': 'return=representation'
+      }
+    });
+    return response.data?.[0] || response.data;
   },
 };

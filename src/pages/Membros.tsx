@@ -69,10 +69,13 @@ export const Membros = () => {
     setIsUpdatingRole(true);
     try {
       const newRole = selectedMembro.role === "admin" ? "member" : "admin";
-      await profileService.updateProfile(selectedMembro.id, { role: newRole });
+      await profileService.updateProfile(selectedMembro.id, {
+        role: newRole,
+      });
+      // Força refetch imediato dos profiles
+      await queryClient.refetchQueries({ queryKey: ["profiles"] });
       setShowRoleModal(false);
       setSelectedMembro(null);
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
       showToast.success("Permissão atualizada com sucesso!");
     } catch (error) {
       console.error("Erro ao atualizar role:", error);

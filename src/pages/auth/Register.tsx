@@ -69,7 +69,12 @@ export const Register: React.FC = () => {
   const handleBlur = useCallback(
     async (field: keyof RegisterFormData) => {
       setTouched((prev) => ({ ...prev, [field]: true }));
-      const error = await validateField(registerSchema, field, formData[field]);
+      const error = await validateField(
+        registerSchema,
+        field,
+        formData[field],
+        formData
+      );
       setErrors((prev) => ({ ...prev, [field]: error }));
     },
     [formData]

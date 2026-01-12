@@ -4,6 +4,7 @@ import { verificationCodeService } from "../../services/verificationCode.service
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { showToast } from "../../utils/toast";
 import {
   AuthLayout,
   AuthHeader,
@@ -88,13 +89,16 @@ export const ResetPassword: React.FC = () => {
       // Solicita código de verificação para o email
       await verificationCodeService.requestCode(formData.email);
 
+      showToast.success("Código enviado! Verifique seu email.");
+
       // Redireciona para a tela de verificação de código
       navigate("/verify-code", {
         state: { email: formData.email },
       });
-    } catch (err) {
+    } catch (err: any) {
       const { message } = handleAuthError(err);
       setSubmitError(message);
+      showToast.error(message || "Erro ao enviar código");
     } finally {
       setLoading(false);
     }

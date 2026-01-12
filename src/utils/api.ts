@@ -13,16 +13,18 @@ export const api = axios.create({
 });
 
 /**
- * Cliente API público (sem interceptor de autenticação)
- * Usado para rotas que não precisam de autenticação, como:
+ * Cliente API público (sem interceptor de autenticação do usuário)
+ * Usado para rotas que não precisam de autenticação do usuário, como:
  * - Recuperação de senha
  * - Verificação de código
+ * Nota: Edge Functions ainda precisam do Authorization header com a anon key
  */
 export const publicApi = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'apikey': API_KEY,
+    'Authorization': `Bearer ${API_KEY}`,
   },
 });
 

@@ -5,6 +5,7 @@ import { verificationCodeService } from "../../services/verificationCode.service
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { showToast } from "../../utils/toast";
 import {
   AuthLayout,
   AuthHeader,
@@ -147,7 +148,8 @@ export const UpdatePassword: React.FC = () => {
       const error = await validateField(
         updatePasswordSchema,
         field,
-        formData[field]
+        formData[field],
+        formData // Passa o formData completo para validar refs (confirmPassword)
       );
       setErrors((prev) => ({ ...prev, [field]: error }));
     },
@@ -200,26 +202,37 @@ export const UpdatePassword: React.FC = () => {
     setLoading(true);
 
     try {
+      console.log("Atualizando senha...", {
+        isCodeVerified,
+        userEmail,
+        verificationToken: verificationToken ? "presente" : "ausente",
+      });
+
       // Se veio do fluxo de verificação de código, usa o serviço de verificação
       if (isCodeVerified && userEmail && verificationToken) {
+        console.log("Usando fluxo de verificação de código");
         await verificationCodeService.updatePassword(
           userEmail,
           formData.password,
           verificationToken
         );
       } else {
+        console.log("Usando fluxo padrão");
         // Fluxo padrão com token de recuperação do Supabase
         await authService.updatePassword(formData.password);
       }
 
       setSuccess(true);
+      showToast.success("Senha atualizada com sucesso!");
 
       // Limpa o token após sucesso (usuário precisará fazer login novamente)
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
-    } catch (err) {
+    } catch (err: any) {
+      console.error("Erro ao atualizar senha:", err);
       const { message } = handleAuthError(err);
       setSubmitError(message);
+      showToast.error(message || "Erro ao atualizar senha");
     } finally {
       setLoading(false);
     }

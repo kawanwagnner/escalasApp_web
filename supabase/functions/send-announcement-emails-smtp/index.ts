@@ -259,7 +259,7 @@ function generateVerificationCodeHTML(code: string): string {
           <tr>
             <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 800;">
-                🔐 Recuperação de Senha
+                Recuperação de Senha
               </h1>
               <p style="margin: 10px 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">
                 Escalas App

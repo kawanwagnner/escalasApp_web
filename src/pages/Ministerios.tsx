@@ -435,8 +435,34 @@ export const Ministerios = () => {
       if (selectedMinisterio) {
         loadEscalas(selectedMinisterio.id);
       }
+      showToast.success("Inscrição removida com sucesso!");
     } catch (error) {
       console.error("Erro ao remover membro:", error);
+      showToast.error("Erro ao remover inscrição");
+    }
+  };
+
+  const handleSelfAssign = async (slotId: string) => {
+    if (!user) return;
+    try {
+      await assignmentService.assignToSlot({
+        slot_id: slotId,
+        user_id: user.id,
+        assigned_by: user.id,
+      });
+      if (selectedMinisterio) {
+        loadEscalas(selectedMinisterio.id);
+      }
+      showToast.success("Inscrição realizada com sucesso!");
+    } catch (error: any) {
+      console.error("Erro ao se inscrever:", error);
+      const errorMsg =
+        error.response?.data?.message || error.response?.data?.msg || "";
+      if (errorMsg.includes("unique") || errorMsg.includes("duplicate")) {
+        showToast.error("Você já está inscrito nesta escala.");
+      } else {
+        showToast.error("Erro ao se inscrever. Tente novamente.");
+      }
     }
   };
 
@@ -884,7 +910,7 @@ export const Ministerios = () => {
                               : "bg-emerald-100 text-emerald-700"
                           }`}
                         >
-                          {escala.mode === "manual" ? "Manual" : "Automático"}
+                          {escala.mode === "manual" ? "Manual" : "Livre"}
                         </span>
                         {user?.role === "admin" && (
                           <>
@@ -952,31 +978,42 @@ export const Ministerios = () => {
                         <Users className="h-4 w-4 text-gray-500" />
                         <span className="text-sm font-medium text-gray-700">
                           {(escala as any).assignments?.length || 0} /{" "}
-                          {escala.capacity} vagas confirmadas
+                          {escala.capacity}{" "}
+                          {escala.mode === "livre"
+                            ? (escala as any).assignments?.length === 1
+                              ? "vaga preenchida"
+                              : "vagas preenchidas"
+                            : "vagas confirmadas"}
                         </span>
                       </div>
-                      {(escala as any).invites?.filter(
-                        (i: any) => i.status === "pending"
-                      )?.length > 0 && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 rounded-lg">
-                          <Clock className="h-4 w-4 text-yellow-600" />
-                          <span className="text-sm font-medium text-yellow-700">
-                            {
-                              (escala as any).invites?.filter(
-                                (i: any) => i.status === "pending"
-                              )?.length
-                            }{" "}
-                            pendentes
-                          </span>
-                        </div>
-                      )}
+                      {escala.mode === "manual" &&
+                        (escala as any).invites?.filter(
+                          (i: any) => i.status === "pending"
+                        )?.length > 0 && (
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 rounded-lg">
+                            <Clock className="h-4 w-4 text-yellow-600" />
+                            <span className="text-sm font-medium text-yellow-700">
+                              {
+                                (escala as any).invites?.filter(
+                                  (i: any) => i.status === "pending"
+                                )?.length
+                              }{" "}
+                              pendentes
+                            </span>
+                          </div>
+                        )}
                     </div>
 
-                    {/* Membros Confirmados */}
+                    {/* Membros Confirmados/Inscritos */}
                     <div className="space-y-3 mb-4">
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                         <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                        Confirmados ({(escala as any).assignments?.length || 0})
+                        {escala.mode === "livre"
+                          ? (escala as any).assignments?.length === 1
+                            ? "Inscrito"
+                            : "Inscritos"
+                          : "Confirmados"}{" "}
+                        ({(escala as any).assignments?.length || 0})
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {(escala as any).assignments?.length > 0 ? (
@@ -995,6 +1032,7 @@ export const Ministerios = () => {
                                 <span className="text-green-600 text-xs">
                                   ✓
                                 </span>
+                                {/* Admin pode remover qualquer um */}
                                 {user?.role === "admin" && (
                                   <button
                                     onClick={() =>
@@ -1011,66 +1049,115 @@ export const Ministerios = () => {
                           )
                         ) : (
                           <p className="text-sm text-gray-400 italic">
-                            Nenhum membro confirmado ainda
+                            {escala.mode === "livre"
+                              ? "Nenhum membro inscrito ainda"
+                              : "Nenhum membro confirmado ainda"}
                           </p>
                         )}
                       </div>
-                    </div>
 
-                    {/* Convites Pendentes - sempre visível para admin */}
-                    <div className="space-y-3 mb-4">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                        <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                        Pendentes (
-                        {(escala as any).invites?.filter(
-                          (i: any) => i.status === "pending"
-                        )?.length || 0}
-                        )
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {(escala as any).invites?.filter(
-                          (i: any) => i.status === "pending"
-                        )?.length > 0 ? (
-                          (escala as any).invites
-                            ?.filter((i: any) => i.status === "pending")
-                            ?.map((invite: any) => (
-                              <div
-                                key={invite.id}
-                                className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-full group"
-                              >
-                                <div className="w-5 h-5 bg-yellow-200 rounded-full flex items-center justify-center text-xs font-medium">
-                                  {invite.email?.charAt(0)?.toUpperCase()}
-                                </div>
-                                <span className="max-w-[150px] truncate">
-                                  {membros.find((m) => m.email === invite.email)
-                                    ?.full_name || invite.email}
-                                </span>
-                                <span className="text-yellow-600 text-xs">
-                                  ⏳
-                                </span>
-                                {user?.role === "admin" && (
-                                  <button
-                                    onClick={() =>
-                                      handleRemoveInvite(invite.id)
-                                    }
-                                    className="ml-1 w-4 h-4 flex items-center justify-center text-yellow-600 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
-                                    title="Cancelar convite"
-                                  >
-                                    ×
-                                  </button>
-                                )}
+                      {/* Botão para se inscrever OU cancelar inscrição em escala livre */}
+                      {escala.mode === "livre" &&
+                        (() => {
+                          const myAssignment = (
+                            escala as any
+                          ).assignments?.find(
+                            (a: any) => a.user_id === user?.id
+                          );
+                          const isInscrito = !!myAssignment;
+                          const hasVagas =
+                            ((escala as any).assignments?.length || 0) <
+                            escala.capacity;
+
+                          if (isInscrito) {
+                            return (
+                              <div className="flex justify-end">
+                                <button
+                                  onClick={() =>
+                                    handleRemoveAssignment(myAssignment.id)
+                                  }
+                                  className="mt-3 flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Cancelar minha inscrição
+                                </button>
                               </div>
-                            ))
-                        ) : (
-                          <p className="text-sm text-gray-400 italic">
-                            Nenhum convite pendente
-                          </p>
-                        )}
-                      </div>
+                            );
+                          } else if (hasVagas) {
+                            return (
+                              <div className="flex justify-end">
+                                <button
+                                  onClick={() => handleSelfAssign(escala.id)}
+                                  className="mt-3 flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  Inscrever-me
+                                </button>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                     </div>
 
-                    {/* Convites Recusados - apenas para admin */}
+                    {/* Convites Pendentes - apenas para modo manual */}
+                    {escala.mode === "manual" && (
+                      <div className="space-y-3 mb-4">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                          <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                          Pendentes (
+                          {(escala as any).invites?.filter(
+                            (i: any) => i.status === "pending"
+                          )?.length || 0}
+                          )
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {(escala as any).invites?.filter(
+                            (i: any) => i.status === "pending"
+                          )?.length > 0 ? (
+                            (escala as any).invites
+                              ?.filter((i: any) => i.status === "pending")
+                              ?.map((invite: any) => (
+                                <div
+                                  key={invite.id}
+                                  className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-full group"
+                                >
+                                  <div className="w-5 h-5 bg-yellow-200 rounded-full flex items-center justify-center text-xs font-medium">
+                                    {invite.email?.charAt(0)?.toUpperCase()}
+                                  </div>
+                                  <span className="max-w-[150px] truncate">
+                                    {membros.find(
+                                      (m) => m.email === invite.email
+                                    )?.full_name || invite.email}
+                                  </span>
+                                  <span className="text-yellow-600 text-xs">
+                                    ⏳
+                                  </span>
+                                  {user?.role === "admin" && (
+                                    <button
+                                      onClick={() =>
+                                        handleRemoveInvite(invite.id)
+                                      }
+                                      className="ml-1 w-4 h-4 flex items-center justify-center text-yellow-600 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
+                                      title="Cancelar convite"
+                                    >
+                                      ×
+                                    </button>
+                                  )}
+                                </div>
+                              ))
+                          ) : (
+                            <p className="text-sm text-gray-400 italic">
+                              Nenhum convite pendente
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Convites Recusados - apenas para admin e modo manual */}
                     {user?.role === "admin" &&
+                      escala.mode === "manual" &&
                       (escala as any).invites?.filter(
                         (i: any) => i.status === "declined"
                       )?.length > 0 && (
@@ -1117,8 +1204,8 @@ export const Ministerios = () => {
                         </div>
                       )}
 
-                    {/* Autocomplete para convidar membro - só admin */}
-                    {user?.role === "admin" && (
+                    {/* Autocomplete para convidar membro - só admin e modo manual */}
+                    {user?.role === "admin" && escala.mode === "manual" && (
                       <div className="mt-4 pt-4 border-t border-gray-100">
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                           Convidar membro

@@ -6,3 +6,4 @@ export * from "./useAssignments";
 export * from "./useInvites";
 export * from "./useEvents";
 export * from "./useAnnouncements";
+export * from "./useScheduleConflict";

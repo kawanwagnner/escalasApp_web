@@ -17,9 +17,18 @@ export default function Convites() {
     try {
       await acceptInvite.mutateAsync({ id: conviteId, userId: user!.id });
       showToast.success("Convite aceito! Você foi adicionado à escala.");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao aceitar convite:", error);
-      showToast.error("Erro ao aceitar convite. Tente novamente.");
+      // Verificar se é um erro de conflito de escala
+      const errorMessage = error?.message || "";
+      if (
+        errorMessage.includes("escalado") ||
+        errorMessage.includes("mesmo dia")
+      ) {
+        showToast.error(errorMessage);
+      } else {
+        showToast.error("Erro ao aceitar convite. Tente novamente.");
+      }
     }
   };
 

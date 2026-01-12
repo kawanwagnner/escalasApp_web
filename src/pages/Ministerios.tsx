@@ -18,6 +18,7 @@ import {
 import type { SetlistData } from "../components/ui";
 import { slotService } from "../services/slot.service";
 import { assignmentService } from "../services/assignment.service";
+import { scheduleConflictService } from "../services/scheduleConflict.service";
 import type { Schedule, Slot } from "../types";
 import {
   Plus,
@@ -469,10 +470,21 @@ export const Ministerios = () => {
     if (invitingMember) return;
     setInvitingMember(true);
     try {
-      await createInvite.mutateAsync({
-        slot_id: slotId,
-        email: memberEmail,
-      });
+      // Usar edge function para verificação e criação atômica
+      const result =
+        await scheduleConflictService.createInviteWithConflictCheck(
+          slotId,
+          memberEmail
+        );
+
+      if (!result.success) {
+        showToast.error(
+          result.error ||
+            "Este membro já está escalado em outra escala no mesmo dia."
+        );
+        return;
+      }
+
       showToast.success("Convite enviado com sucesso!");
       if (selectedMinisterio) {
         await loadEscalas(selectedMinisterio.id);
@@ -480,14 +492,14 @@ export const Ministerios = () => {
     } catch (error: any) {
       console.error("Erro ao convidar membro:", error);
       const errorMsg =
-        error.response?.data?.message || error.response?.data?.msg || "";
+        error.response?.data?.error || error.response?.data?.message || "";
 
       if (errorMsg.includes("unique") || errorMsg.includes("duplicate")) {
         showToast.error(
           "Este membro já possui um convite pendente ou já está na escala."
         );
       } else {
-        showToast.error("Erro ao enviar convite. Tente novamente.");
+        showToast.error(errorMsg || "Erro ao enviar convite. Tente novamente.");
       }
     } finally {
       setInvitingMember(false);
@@ -561,11 +573,19 @@ export const Ministerios = () => {
   const handleSelfAssign = async (slotId: string) => {
     if (!user) return;
     try {
-      await assignmentService.assignToSlot({
-        slot_id: slotId,
-        user_id: user.id,
-        assigned_by: user.id,
-      });
+      // Usar edge function para verificação e criação atômica
+      const result = await scheduleConflictService.selfAssignWithConflictCheck(
+        slotId,
+        user.id
+      );
+
+      if (!result.success) {
+        showToast.error(
+          result.error || "Você já está escalado em outra escala no mesmo dia."
+        );
+        return;
+      }
+
       if (selectedMinisterio) {
         loadEscalas(selectedMinisterio.id);
       }
@@ -573,11 +593,15 @@ export const Ministerios = () => {
     } catch (error: any) {
       console.error("Erro ao se inscrever:", error);
       const errorMsg =
-        error.response?.data?.message || error.response?.data?.msg || "";
-      if (errorMsg.includes("unique") || errorMsg.includes("duplicate")) {
+        error.response?.data?.error || error.response?.data?.message || "";
+      if (
+        errorMsg.includes("unique") ||
+        errorMsg.includes("duplicate") ||
+        errorMsg.includes("já está inscrito")
+      ) {
         showToast.error("Você já está inscrito nesta escala.");
       } else {
-        showToast.error("Erro ao se inscrever. Tente novamente.");
+        showToast.error(errorMsg || "Erro ao se inscrever. Tente novamente.");
       }
     }
   };

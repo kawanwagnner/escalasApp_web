@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Bold, Italic, Link, List } from "lucide-react";
+import { Bold, Italic, Link, List, ListOrdered } from "lucide-react";
 
 interface RichTextareaProps {
   label?: string;
@@ -96,6 +96,32 @@ export const RichTextarea: React.FC<RichTextareaProps> = ({
     }, 0);
   };
 
+  const handleNumberedList = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+    const beforeLine = value.substring(0, lineStart);
+    const afterCursor = value.substring(start);
+    const currentLineBeforeCursor = value.substring(lineStart, start);
+
+    // Conta quantas linhas numeradas já existem antes
+    const previousLines = beforeLine
+      .split("\n")
+      .filter((line) => /^\d+\./.test(line.trim()));
+    const nextNumber = previousLines.length + 1;
+
+    const newText = `${beforeLine}${nextNumber}. ${currentLineBeforeCursor}${afterCursor}`;
+    onChange(newText);
+
+    setTimeout(() => {
+      textarea.focus();
+      const newPos = start + `${nextNumber}. `.length;
+      textarea.setSelectionRange(newPos, newPos);
+    }, 0);
+  };
+
   return (
     <div className={className}>
       {label && (
@@ -138,6 +164,14 @@ export const RichTextarea: React.FC<RichTextareaProps> = ({
         >
           <List className="h-4 w-4 text-gray-600" />
         </button>
+        <button
+          type="button"
+          onClick={handleNumberedList}
+          className="p-1.5 hover:bg-gray-200 rounded transition-colors"
+          title="Lista numerada"
+        >
+          <ListOrdered className="h-4 w-4 text-gray-600" />
+        </button>
         <span className="ml-auto text-xs text-gray-400 pr-2">
           Suporta quebra de linha
         </span>
@@ -152,7 +186,7 @@ export const RichTextarea: React.FC<RichTextareaProps> = ({
         rows={rows}
         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-b-lg 
                    focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                   transition-all outline-none resize-y min-h-[80px]"
+                   transition-all outline-none resize-y min-h-[120px]"
       />
 
       {/* Dica */}

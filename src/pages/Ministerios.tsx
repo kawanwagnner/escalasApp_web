@@ -5,6 +5,14 @@ import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
 import { Input } from "../components/ui/Input";
 import { RichTextarea } from "../components/ui/RichTextarea";
+import {
+  SetlistForm,
+  setlistToDescription,
+  descriptionToSetlist,
+  SetlistDisplay,
+  isSetlistDescription,
+} from "../components/ui";
+import type { SetlistData } from "../components/ui";
 import { slotService } from "../services/slot.service";
 import { assignmentService } from "../services/assignment.service";
 import type { Schedule, Slot } from "../types";
@@ -16,6 +24,8 @@ import {
   Calendar,
   Music,
   Pencil,
+  FileText,
+  ListMusic,
 } from "lucide-react";
 import { MemberAutocomplete } from "../components/ui/MemberAutocomplete";
 import { formatDate, formatTime } from "../utils/dateHelpers";
@@ -76,6 +86,29 @@ export const Ministerios = () => {
     capacity: 5,
   });
 
+  // Estado para controlar o modo de criação da descrição (apenas para Louvor)
+  const [descriptionMode, setDescriptionMode] = useState<"livre" | "setlist">(
+    "livre"
+  );
+  const [setlistData, setSetlistData] = useState<SetlistData>({
+    title: "",
+    songs: [],
+    notes: "",
+    playlistUrl: "",
+  });
+
+  // Função para verificar se é ministério de Louvor
+  const isLouvorMinisterio = (ministerio: Schedule | null): boolean => {
+    if (!ministerio) return false;
+    const title = ministerio.title.toLowerCase();
+    return (
+      title.includes("louvor") ||
+      title.includes("música") ||
+      title.includes("musica") ||
+      title.includes("worship")
+    );
+  };
+
   const loadEscalas = async (ministerioId: string) => {
     setLoadingEscalas(true);
     try {
@@ -119,6 +152,27 @@ export const Ministerios = () => {
       return;
     }
 
+    // Determina a descrição baseada no modo
+    let finalDescription = escalaFormData.description;
+    if (
+      isLouvorMinisterio(selectedMinisterio) &&
+      descriptionMode === "setlist"
+    ) {
+      if (!setlistData.title.trim()) {
+        showToast.error("O título do setlist é obrigatório");
+        return;
+      }
+      if (setlistData.songs.length === 0) {
+        showToast.error("Adicione pelo menos uma música ao setlist");
+        return;
+      }
+      if (setlistData.songs.some((s) => !s.title.trim())) {
+        showToast.error("Todas as músicas devem ter um título");
+        return;
+      }
+      finalDescription = setlistToDescription(setlistData);
+    }
+
     try {
       // Combina a data do ministério com os horários para criar timestamps completos
       const baseDate =
@@ -129,7 +183,7 @@ export const Ministerios = () => {
       await createSlot.mutateAsync({
         schedule_id: selectedMinisterio.id,
         title: escalaFormData.title,
-        description: escalaFormData.description,
+        description: finalDescription,
         start_time: startTimestamp,
         end_time: endTimestamp,
         mode: escalaFormData.mode,
@@ -145,6 +199,14 @@ export const Ministerios = () => {
         mode: "manual",
         capacity: 5,
       });
+      // Reset setlist data
+      setSetlistData({
+        title: "",
+        songs: [],
+        notes: "",
+        playlistUrl: "",
+      });
+      setDescriptionMode("livre");
       loadEscalas(selectedMinisterio.id);
     } catch (error) {
       console.error("Erro ao criar escala:", error);
@@ -167,6 +229,22 @@ export const Ministerios = () => {
       mode: escala.mode || "manual",
       capacity: escala.capacity || 5,
     });
+
+    // Se for ministério de Louvor, tenta parsear a descrição como setlist
+    if (isLouvorMinisterio(selectedMinisterio) && escala.description) {
+      const parsedSetlist = descriptionToSetlist(escala.description);
+      if (parsedSetlist && parsedSetlist.songs.length > 0) {
+        setDescriptionMode("setlist");
+        setSetlistData(parsedSetlist);
+      } else {
+        setDescriptionMode("livre");
+        setSetlistData({ title: "", songs: [], notes: "", playlistUrl: "" });
+      }
+    } else {
+      setDescriptionMode("livre");
+      setSetlistData({ title: "", songs: [], notes: "", playlistUrl: "" });
+    }
+
     setShowEditEscalaModal(true);
   };
 
@@ -179,6 +257,27 @@ export const Ministerios = () => {
       return;
     }
 
+    // Determina a descrição baseada no modo
+    let finalDescription = escalaFormData.description;
+    if (
+      isLouvorMinisterio(selectedMinisterio) &&
+      descriptionMode === "setlist"
+    ) {
+      if (!setlistData.title.trim()) {
+        showToast.error("O título do setlist é obrigatório");
+        return;
+      }
+      if (setlistData.songs.length === 0) {
+        showToast.error("Adicione pelo menos uma música ao setlist");
+        return;
+      }
+      if (setlistData.songs.some((s) => !s.title.trim())) {
+        showToast.error("Todas as músicas devem ter um título");
+        return;
+      }
+      finalDescription = setlistToDescription(setlistData);
+    }
+
     try {
       const baseDate =
         selectedMinisterio.date || new Date().toISOString().split("T")[0];
@@ -189,7 +288,7 @@ export const Ministerios = () => {
         id: editingEscala.id,
         data: {
           title: escalaFormData.title,
-          description: escalaFormData.description,
+          description: finalDescription,
           start_time: startTimestamp,
           end_time: endTimestamp,
           mode: escalaFormData.mode,
@@ -207,6 +306,14 @@ export const Ministerios = () => {
         mode: "manual",
         capacity: 5,
       });
+      // Reset setlist data
+      setSetlistData({
+        title: "",
+        songs: [],
+        notes: "",
+        playlistUrl: "",
+      });
+      setDescriptionMode("livre");
       loadEscalas(selectedMinisterio.id);
       showToast.success("Escala atualizada com sucesso!");
     } catch (error) {
@@ -651,38 +758,44 @@ export const Ministerios = () => {
 
                   {/* Corpo da Escala */}
                   <div className="p-4">
-                    {/* Descrição com markdown e links clicáveis */}
-                    {escala.description && (
-                      <div
-                        className="text-sm text-gray-600 mb-4 whitespace-pre-wrap break-words"
-                        dangerouslySetInnerHTML={{
-                          __html: escala.description
-                            // Negrito: **texto** -> <strong>texto</strong>
-                            .replace(
-                              /\*\*(.+?)\*\*/g,
-                              '<strong class="font-bold text-gray-800">$1</strong>'
-                            )
-                            // Itálico: _texto_ -> <em>texto</em>
-                            .replace(
-                              /(?<!\w)_(.+?)_(?!\w)/g,
-                              '<em class="italic">$1</em>'
-                            )
-                            // Links: [texto](url) -> <a href="url">texto</a>
-                            .replace(
-                              /\[(.+?)\]\((.+?)\)/g,
-                              '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline">$1</a>'
-                            )
-                            // URLs diretas
-                            .replace(
-                              /(?<!href=")(https?:\/\/[^\s<]+)/g,
-                              '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline break-all">$1</a>'
-                            ),
-                        }}
-                      />
-                    )}
+                    {/* Descrição - usa SetlistDisplay para Louvor com setlist, ou markdown para outros */}
+                    {escala.description &&
+                      (isLouvorMinisterio(selectedMinisterio) &&
+                      isSetlistDescription(escala.description) ? (
+                        <div className="mb-4">
+                          <SetlistDisplay description={escala.description} />
+                        </div>
+                      ) : (
+                        <div
+                          className="text-sm text-gray-600 mb-4 whitespace-pre-wrap break-words"
+                          dangerouslySetInnerHTML={{
+                            __html: escala.description
+                              // Negrito: **texto** -> <strong>texto</strong>
+                              .replace(
+                                /\*\*(.+?)\*\*/g,
+                                '<strong class="font-bold text-gray-800">$1</strong>'
+                              )
+                              // Itálico: _texto_ -> <em>texto</em>
+                              .replace(
+                                /(?<!\w)_(.+?)_(?!\w)/g,
+                                '<em class="italic">$1</em>'
+                              )
+                              // Links: [texto](url) -> <a href="url">texto</a>
+                              .replace(
+                                /\[(.+?)\]\((.+?)\)/g,
+                                '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline">$1</a>'
+                              )
+                              // URLs diretas
+                              .replace(
+                                /(?<!href=")(https?:\/\/[^\s<]+)/g,
+                                '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline break-all">$1</a>'
+                              ),
+                          }}
+                        />
+                      ))}
 
                     {/* Info de vagas - só conta confirmados */}
-                    <div className="flex items-center gap-4 mb-4">
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
                       <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
                         <Users className="h-4 w-4 text-gray-500" />
                         <span className="text-sm font-medium text-gray-700">
@@ -891,13 +1004,26 @@ export const Ministerios = () => {
       {/* Modal Nova Escala */}
       <Modal
         isOpen={showNovaEscalaModal}
-        onClose={() => setShowNovaEscalaModal(false)}
+        onClose={() => {
+          setShowNovaEscalaModal(false);
+          setDescriptionMode("livre");
+          setSetlistData({ title: "", songs: [], notes: "", playlistUrl: "" });
+        }}
         title="Nova Escala"
         footer={
           <>
             <Button
               variant="secondary"
-              onClick={() => setShowNovaEscalaModal(false)}
+              onClick={() => {
+                setShowNovaEscalaModal(false);
+                setDescriptionMode("livre");
+                setSetlistData({
+                  title: "",
+                  songs: [],
+                  notes: "",
+                  playlistUrl: "",
+                });
+              }}
             >
               Cancelar
             </Button>
@@ -915,18 +1041,62 @@ export const Ministerios = () => {
             }
             required
           />
-          <RichTextarea
-            label="Descrição"
-            placeholder="Detalhes da escala, links, instruções..."
-            value={escalaFormData.description}
-            onChange={(value) =>
-              setEscalaFormData({
-                ...escalaFormData,
-                description: value,
-              })
-            }
-            rows={4}
-          />
+
+          {/* Tabs para modo de descrição - apenas para Louvor */}
+          {isLouvorMinisterio(selectedMinisterio) && (
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Descrição
+              </label>
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                <button
+                  type="button"
+                  onClick={() => setDescriptionMode("livre")}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${
+                    descriptionMode === "livre"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <FileText className="h-4 w-4" />
+                  Livre
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDescriptionMode("setlist")}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${
+                    descriptionMode === "setlist"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <ListMusic className="h-4 w-4" />
+                  Setlist
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Conteúdo baseado no modo */}
+          {isLouvorMinisterio(selectedMinisterio) &&
+          descriptionMode === "setlist" ? (
+            <SetlistForm value={setlistData} onChange={setSetlistData} />
+          ) : (
+            <RichTextarea
+              label={
+                isLouvorMinisterio(selectedMinisterio) ? undefined : "Descrição"
+              }
+              placeholder="Detalhes da escala, links, instruções..."
+              value={escalaFormData.description}
+              onChange={(value) =>
+                setEscalaFormData({
+                  ...escalaFormData,
+                  description: value,
+                })
+              }
+              rows={4}
+            />
+          )}
           <div className="grid grid-cols-2 gap-4">
             <Input
               type="time"
@@ -1003,6 +1173,8 @@ export const Ministerios = () => {
             mode: "manual",
             capacity: 5,
           });
+          setDescriptionMode("livre");
+          setSetlistData({ title: "", songs: [], notes: "", playlistUrl: "" });
         }}
         title="Editar Escala"
         footer={
@@ -1012,6 +1184,13 @@ export const Ministerios = () => {
               onClick={() => {
                 setShowEditEscalaModal(false);
                 setEditingEscala(null);
+                setDescriptionMode("livre");
+                setSetlistData({
+                  title: "",
+                  songs: [],
+                  notes: "",
+                  playlistUrl: "",
+                });
               }}
             >
               Cancelar
@@ -1030,18 +1209,63 @@ export const Ministerios = () => {
             }
             required
           />
-          <RichTextarea
-            label="Descrição"
-            placeholder="Detalhes da escala, links, instruções..."
-            value={escalaFormData.description}
-            onChange={(value) =>
-              setEscalaFormData({
-                ...escalaFormData,
-                description: value,
-              })
-            }
-            rows={4}
-          />
+
+          {/* Tabs para modo de descrição - apenas para Louvor */}
+          {isLouvorMinisterio(selectedMinisterio) && (
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Descrição
+              </label>
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                <button
+                  type="button"
+                  onClick={() => setDescriptionMode("livre")}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${
+                    descriptionMode === "livre"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <FileText className="h-4 w-4" />
+                  Livre
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDescriptionMode("setlist")}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${
+                    descriptionMode === "setlist"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <ListMusic className="h-4 w-4" />
+                  Setlist
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Conteúdo baseado no modo */}
+          {isLouvorMinisterio(selectedMinisterio) &&
+          descriptionMode === "setlist" ? (
+            <SetlistForm value={setlistData} onChange={setSetlistData} />
+          ) : (
+            <RichTextarea
+              label={
+                isLouvorMinisterio(selectedMinisterio) ? undefined : "Descrição"
+              }
+              placeholder="Detalhes da escala, links, instruções..."
+              value={escalaFormData.description}
+              onChange={(value) =>
+                setEscalaFormData({
+                  ...escalaFormData,
+                  description: value,
+                })
+              }
+              rows={4}
+            />
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <Input
               type="time"

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { authService } from "../../services/auth.service";
+import { verificationCodeService } from "../../services/verificationCode.service";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { showToast } from "../../utils/toast";
 import {
   AuthLayout,
   AuthHeader,
@@ -52,12 +54,37 @@ export const UpdatePassword: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [isValidToken, setIsValidToken] = useState<boolean | null>(null);
   const [checkingToken, setCheckingToken] = useState(true);
+  const [isCodeVerified, setIsCodeVerified] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [verificationToken, setVerificationToken] = useState<string>("");
 
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Verifica se tem token válido na URL
+  // Verifica se tem token válido na URL ou se veio da verificação de código
   useEffect(() => {
     const checkToken = async () => {
+      // Verifica se veio da tela de verificação de código
+      const state = location.state as {
+        email?: string;
+        verified?: boolean;
+        verificationToken?: string;
+      } | null;
+
+      if (state?.verified && state?.email && state?.verificationToken) {
+        // Usuário verificou o código com sucesso
+        setIsCodeVerified(true);
+        setUserEmail(state.email);
+        setVerificationToken(state.verificationToken);
+        setIsValidToken(true);
+        setCheckingToken(false);
+
+        // Limpa o state para segurança (evita reload voltar ao estado anterior)
+        window.history.replaceState({}, document.title);
+        return;
+      }
+
+      // Fluxo antigo: verifica token do hash da URL (fallback para links antigos)
       const hashParams = getHashParams();
       const accessToken = hashParams.access_token;
       const type = hashParams.type;
@@ -90,7 +117,7 @@ export const UpdatePassword: React.FC = () => {
     };
 
     checkToken();
-  }, []);
+  }, [location.state]);
 
   // Critérios de senha
   const passwordCriteria = useMemo(
@@ -121,7 +148,8 @@ export const UpdatePassword: React.FC = () => {
       const error = await validateField(
         updatePasswordSchema,
         field,
-        formData[field]
+        formData[field],
+        formData // Passa o formData completo para validar refs (confirmPassword)
       );
       setErrors((prev) => ({ ...prev, [field]: error }));
     },
@@ -174,15 +202,37 @@ export const UpdatePassword: React.FC = () => {
     setLoading(true);
 
     try {
-      await authService.updatePassword(formData.password);
+      console.log("Atualizando senha...", {
+        isCodeVerified,
+        userEmail,
+        verificationToken: verificationToken ? "presente" : "ausente",
+      });
+
+      // Se veio do fluxo de verificação de código, usa o serviço de verificação
+      if (isCodeVerified && userEmail && verificationToken) {
+        console.log("Usando fluxo de verificação de código");
+        await verificationCodeService.updatePassword(
+          userEmail,
+          formData.password,
+          verificationToken
+        );
+      } else {
+        console.log("Usando fluxo padrão");
+        // Fluxo padrão com token de recuperação do Supabase
+        await authService.updatePassword(formData.password);
+      }
+
       setSuccess(true);
+      showToast.success("Senha atualizada com sucesso!");
 
       // Limpa o token após sucesso (usuário precisará fazer login novamente)
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
-    } catch (err) {
+    } catch (err: any) {
+      console.error("Erro ao atualizar senha:", err);
       const { message } = handleAuthError(err);
       setSubmitError(message);
+      showToast.error(message || "Erro ao atualizar senha");
     } finally {
       setLoading(false);
     }

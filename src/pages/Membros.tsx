@@ -8,7 +8,16 @@ import { useProfiles } from "../hooks";
 import { useAuth } from "../context/AuthContext";
 import { authService } from "../services/auth.service";
 import { profileService } from "../services/profile.service";
-import { Users, Music, BookOpen, Search, Plus, Shield, ShieldCheck } from "lucide-react";
+import { showToast } from "../utils/toast";
+import {
+  Users,
+  Music,
+  BookOpen,
+  Search,
+  Plus,
+  Shield,
+  ShieldCheck,
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Membros = () => {
@@ -32,17 +41,23 @@ export const Membros = () => {
   );
 
   const handleCreateMember = async () => {
-    if (!createForm.fullName || !createForm.email || !createForm.password) return;
-    
+    if (!createForm.fullName || !createForm.email || !createForm.password)
+      return;
+
     setIsCreating(true);
     try {
-      await authService.signUp(createForm.email, createForm.password, createForm.fullName);
+      await authService.signUp(
+        createForm.email,
+        createForm.password,
+        createForm.fullName
+      );
       setShowCreateModal(false);
       setCreateForm({ fullName: "", email: "", password: "" });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      showToast.success("Membro cadastrado com sucesso!");
     } catch (error: any) {
       console.error("Erro ao cadastrar membro:", error);
-      alert(error.response?.data?.msg || "Erro ao cadastrar membro");
+      showToast.error(error.response?.data?.msg || "Erro ao cadastrar membro");
     } finally {
       setIsCreating(false);
     }
@@ -50,17 +65,18 @@ export const Membros = () => {
 
   const handleToggleRole = async () => {
     if (!selectedMembro) return;
-    
+
     setIsUpdatingRole(true);
     try {
-      const newRole = selectedMembro.role === 'admin' ? 'member' : 'admin';
+      const newRole = selectedMembro.role === "admin" ? "member" : "admin";
       await profileService.updateProfile(selectedMembro.id, { role: newRole });
       setShowRoleModal(false);
       setSelectedMembro(null);
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      showToast.success("Permissão atualizada com sucesso!");
     } catch (error) {
       console.error("Erro ao atualizar role:", error);
-      alert("Erro ao atualizar permissão do membro");
+      showToast.error("Erro ao atualizar permissão do membro");
     } finally {
       setIsUpdatingRole(false);
     }
@@ -115,7 +131,7 @@ export const Membros = () => {
               {membros.length} membros cadastrados
             </p>
           </div>
-          {user?.role === 'admin' && (
+          {user?.role === "admin" && (
             <Button onClick={() => setShowCreateModal(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Novo Membro
@@ -136,6 +152,7 @@ export const Membros = () => {
         </div>
 
         {/* Estatísticas */}
+        <h3 className="mt-7 mb-2">Ofícios</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="bg-blue-50 border-blue-200">
             <div className="flex items-center gap-4">
@@ -180,7 +197,10 @@ export const Membros = () => {
           </Card>
         </div>
 
+        <hr className="text-gray-300" />
+
         {/* Lista de Membros */}
+        <h3 className="mt-7 mb-2">Membros</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredMembros.map((membro) => (
             <Card key={membro.id} hover>
@@ -197,7 +217,7 @@ export const Membros = () => {
                     <h3 className="font-semibold text-gray-900">
                       {membro.full_name}
                     </h3>
-                    {membro.role === 'admin' && (
+                    {membro.role === "admin" && (
                       <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full flex items-center gap-1">
                         <ShieldCheck className="h-3 w-3" />
                         Admin
@@ -219,7 +239,7 @@ export const Membros = () => {
                     )}
                   </div>
                 </div>
-                {user?.role === 'admin' && membro.id !== user.id && (
+                {user?.role === "admin" && membro.id !== user.id && (
                   <button
                     onClick={() => openRoleModal(membro)}
                     className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
@@ -249,7 +269,10 @@ export const Membros = () => {
           title="Cadastrar Novo Membro"
           footer={
             <div className="flex gap-3">
-              <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
+              <Button
+                variant="secondary"
+                onClick={() => setShowCreateModal(false)}
+              >
                 Cancelar
               </Button>
               <Button onClick={handleCreateMember} isLoading={isCreating}>
@@ -298,7 +321,10 @@ export const Membros = () => {
           title="Alterar Permissão"
           footer={
             <div className="flex gap-3">
-              <Button variant="secondary" onClick={() => setShowRoleModal(false)}>
+              <Button
+                variant="secondary"
+                onClick={() => setShowRoleModal(false)}
+              >
                 Cancelar
               </Button>
               <Button onClick={handleToggleRole} isLoading={isUpdatingRole}>
@@ -318,15 +344,19 @@ export const Membros = () => {
                   {getInitials(selectedMembro.full_name)}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">{selectedMembro.full_name}</p>
-                  <p className="text-sm text-gray-500">{selectedMembro.email}</p>
+                  <p className="font-semibold text-gray-900">
+                    {selectedMembro.full_name}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {selectedMembro.email}
+                  </p>
                 </div>
               </div>
-              
+
               <div className="p-4 border rounded-lg">
                 <p className="text-sm text-gray-600 mb-2">Permissão atual:</p>
                 <p className="font-semibold flex items-center gap-2">
-                  {selectedMembro.role === 'admin' ? (
+                  {selectedMembro.role === "admin" ? (
                     <>
                       <ShieldCheck className="h-5 w-5 text-amber-600" />
                       <span className="text-amber-700">Administrador</span>
@@ -343,7 +373,7 @@ export const Membros = () => {
               <div className="p-4 border-2 border-dashed rounded-lg bg-blue-50 border-blue-200">
                 <p className="text-sm text-gray-600 mb-2">Nova permissão:</p>
                 <p className="font-semibold flex items-center gap-2">
-                  {selectedMembro.role === 'admin' ? (
+                  {selectedMembro.role === "admin" ? (
                     <>
                       <Users className="h-5 w-5 text-blue-600" />
                       <span className="text-blue-700">Membro</span>
@@ -357,9 +387,11 @@ export const Membros = () => {
                 </p>
               </div>
 
-              {selectedMembro.role !== 'admin' && (
+              {selectedMembro.role !== "admin" && (
                 <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
-                  ⚠️ Administradores têm acesso total ao sistema, incluindo criar/editar ministérios, escalas, eventos e gerenciar outros membros.
+                  ⚠️ Administradores têm acesso total ao sistema, incluindo
+                  criar/editar ministérios, escalas, eventos e gerenciar outros
+                  membros.
                 </p>
               )}
             </div>

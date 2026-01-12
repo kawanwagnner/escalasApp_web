@@ -5,6 +5,7 @@ export { slotService } from './slot.service';
 export { themeService } from './theme.service';
 export { assignmentService } from './assignment.service';
 export { inviteService } from './invite.service';
+export { verificationCodeService } from './verificationCode.service';
 
 // Novos services (endpoints adicionais)
 export { announcementService } from './announcement.service';

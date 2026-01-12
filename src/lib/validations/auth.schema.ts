@@ -71,16 +71,30 @@ export const updatePasswordSchema = yup.object({
     .oneOf([yup.ref("password")], messages.passwordMatch),
 });
 
+// Schema de Verificação de Código
+export const verifyCodeSchema = yup.object({
+  code: yup
+    .string()
+    .required("Digite o código de verificação")
+    .matches(/^[0-9]{6}$/, "O código deve ter 6 dígitos numéricos"),
+});
+
+export type VerifyCodeFormData = yup.InferType<typeof verifyCodeSchema>;
+
 export type UpdatePasswordFormData = yup.InferType<typeof updatePasswordSchema>;
 
 // Função auxiliar para validar campo individual
+// Nota: para campos que dependem de outros (como confirmPassword), passe o formData completo
 export async function validateField<T extends yup.AnyObject>(
   schema: yup.ObjectSchema<T>,
   field: keyof T,
-  value: any
+  value: any,
+  formData?: Partial<T>
 ): Promise<string> {
   try {
-    await schema.validateAt(field as string, { [field]: value });
+    // Se temos o formData completo, usamos ele para validar (necessário para refs como confirmPassword)
+    const dataToValidate = formData ? { ...formData, [field]: value } : { [field]: value };
+    await schema.validateAt(field as string, dataToValidate);
     return "";
   } catch (err) {
     if (err instanceof yup.ValidationError) {

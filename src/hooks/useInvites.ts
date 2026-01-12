@@ -27,6 +27,7 @@ export function useCreateInvite() {
       inviteService.createInvite(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: INVITES_KEY });
+      queryClient.invalidateQueries({ queryKey: ["slots"] });
     },
   });
 }
@@ -38,7 +39,10 @@ export function useAcceptInvite() {
     mutationFn: ({ id, userId }: { id: string; userId: string }) =>
       inviteService.acceptInvite(id, userId),
     onSuccess: () => {
+      // Invalidar convites e assignments para refletir mudanças em ambas as listas
       queryClient.invalidateQueries({ queryKey: INVITES_KEY });
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["slots"] });
     },
   });
 }
@@ -50,6 +54,7 @@ export function useDeclineInvite() {
     mutationFn: (id: string) => inviteService.declineInvite(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: INVITES_KEY });
+      queryClient.invalidateQueries({ queryKey: ["slots"] });
     },
   });
 }
@@ -61,6 +66,7 @@ export function useDeleteInvite() {
     mutationFn: (id: string) => inviteService.deleteInvite(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: INVITES_KEY });
+      queryClient.invalidateQueries({ queryKey: ["slots"] });
     },
   });
 }

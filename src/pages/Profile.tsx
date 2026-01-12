@@ -1,7 +1,17 @@
 import React, { useState } from "react";
 
-import { UserCircle, Mail, Calendar, Edit, Save, Lock, Eye, EyeOff } from "lucide-react";
+import {
+  UserCircle,
+  Mail,
+  Calendar,
+  Edit,
+  Save,
+  Lock,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { formatDate } from "../utils/dateHelpers";
+import { showToast } from "../utils/toast";
 import { profileService, authService } from "../services";
 import { Layout } from "../components/layout";
 import { Button, Card, Input, Modal } from "../components/ui";
@@ -26,12 +36,12 @@ export const Profile: React.FC = () => {
 
   const handleChangePassword = async () => {
     setPasswordError("");
-    
+
     if (passwordForm.newPassword.length < 6) {
       setPasswordError("A senha deve ter pelo menos 6 caracteres");
       return;
     }
-    
+
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setPasswordError("As senhas não coincidem");
       return;
@@ -42,7 +52,7 @@ export const Profile: React.FC = () => {
       await authService.updatePassword(passwordForm.newPassword);
       setShowPasswordModal(false);
       setPasswordForm({ newPassword: "", confirmPassword: "" });
-      alert("Senha alterada com sucesso!");
+      showToast.success("Senha alterada com sucesso!");
     } catch (error: any) {
       console.error("Erro ao alterar senha:", error);
       setPasswordError(error.response?.data?.msg || "Erro ao alterar senha");
@@ -201,7 +211,9 @@ export const Profile: React.FC = () => {
                   <div className="text-sm text-gray-600">Senha</div>
                   <div className="font-medium text-gray-900">••••••••</div>
                 </div>
-                <span className="text-sm text-blue-600 font-medium">Alterar</span>
+                <span className="text-sm text-blue-600 font-medium">
+                  Alterar
+                </span>
               </button>
             </div>
           )}
@@ -252,7 +264,10 @@ export const Profile: React.FC = () => {
               >
                 Cancelar
               </Button>
-              <Button onClick={handleChangePassword} isLoading={passwordLoading}>
+              <Button
+                onClick={handleChangePassword}
+                isLoading={passwordLoading}
+              >
                 Alterar Senha
               </Button>
             </div>
@@ -265,7 +280,10 @@ export const Profile: React.FC = () => {
                 type={showPassword ? "text" : "password"}
                 value={passwordForm.newPassword}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setPasswordForm({ ...passwordForm, newPassword: e.target.value })
+                  setPasswordForm({
+                    ...passwordForm,
+                    newPassword: e.target.value,
+                  })
                 }
                 placeholder="Digite a nova senha"
               />
@@ -274,17 +292,24 @@ export const Profile: React.FC = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
               >
-                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
               </button>
             </div>
-            
+
             <div className="relative">
               <Input
                 label="Confirmar nova senha"
                 type={showConfirmPassword ? "text" : "password"}
                 value={passwordForm.confirmPassword}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
+                  setPasswordForm({
+                    ...passwordForm,
+                    confirmPassword: e.target.value,
+                  })
                 }
                 placeholder="Confirme a nova senha"
               />
@@ -293,7 +318,11 @@ export const Profile: React.FC = () => {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
               >
-                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                {showConfirmPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
               </button>
             </div>
 

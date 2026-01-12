@@ -8,6 +8,7 @@ import { RecoveryRedirect } from "../components/auth/RecoveryRedirect";
 import { Login } from "../pages/auth/Login";
 import { Register } from "../pages/auth/Register";
 import { ResetPassword } from "../pages/auth/ResetPassword";
+import { VerifyCode } from "../pages/auth/VerifyCode";
 import { UpdatePassword } from "../pages/auth/UpdatePassword";
 
 // Main Pages
@@ -31,6 +32,7 @@ export const AppRoutes: React.FC = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-code" element={<VerifyCode />} />
             <Route path="/update-password" element={<UpdatePassword />} />
 
             {/* Protected Routes */}

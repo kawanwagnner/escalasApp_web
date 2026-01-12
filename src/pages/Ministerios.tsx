@@ -34,6 +34,7 @@ import { useAuth } from "../context/AuthContext";
 import {
   useSchedules,
   useCreateSchedule,
+  useUpdateSchedule,
   useDeleteSchedule,
 } from "../hooks/useSchedules";
 import {
@@ -50,6 +51,7 @@ export const Ministerios = () => {
   const { data: ministerios = [], isLoading } = useSchedules();
   const { data: membros = [] } = useProfiles();
   const createSchedule = useCreateSchedule();
+  const updateSchedule = useUpdateSchedule();
   const deleteSchedule = useDeleteSchedule();
   const createSlot = useCreateSlot();
   const updateSlot = useUpdateSlot();
@@ -58,6 +60,10 @@ export const Ministerios = () => {
   const deleteInvite = useDeleteInvite();
 
   const [showModal, setShowModal] = useState(false);
+  const [showEditMinisterioModal, setShowEditMinisterioModal] = useState(false);
+  const [editingMinisterio, setEditingMinisterio] = useState<Schedule | null>(
+    null
+  );
   const [showEscalasModal, setShowEscalasModal] = useState(false);
   const [showNovaEscalaModal, setShowNovaEscalaModal] = useState(false);
   const [showEditEscalaModal, setShowEditEscalaModal] = useState(false);
@@ -70,6 +76,14 @@ export const Ministerios = () => {
   const [invitingMember, setInvitingMember] = useState(false);
 
   const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    date: "",
+    notify_24h: true,
+    notify_48h: true,
+    notify_48h_musician: true,
+  });
+  const [editFormData, setEditFormData] = useState({
     title: "",
     description: "",
     date: "",
@@ -118,6 +132,49 @@ export const Ministerios = () => {
       console.error("Erro ao carregar escalas:", error);
     } finally {
       setLoadingEscalas(false);
+    }
+  };
+
+  const handleOpenEditMinisterio = (ministerio: Schedule) => {
+    setEditingMinisterio(ministerio);
+    setEditFormData({
+      title: ministerio.title || "",
+      description: ministerio.description || "",
+      date: ministerio.date || "",
+      notify_24h: ministerio.notify_24h ?? true,
+      notify_48h: ministerio.notify_48h ?? true,
+      notify_48h_musician: ministerio.notify_48h_musician ?? true,
+    });
+    setShowEditMinisterioModal(true);
+  };
+
+  const handleUpdateMinisterio = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMinisterio) return;
+
+    if (!editFormData.title.trim()) {
+      showToast.error("O nome do ministério é obrigatório");
+      return;
+    }
+
+    try {
+      await updateSchedule.mutateAsync({
+        id: editingMinisterio.id,
+        data: {
+          title: editFormData.title,
+          description: editFormData.description,
+          date: editFormData.date,
+          notify_24h: editFormData.notify_24h,
+          notify_48h: editFormData.notify_48h,
+          notify_48h_musician: editFormData.notify_48h_musician,
+        },
+      });
+      setShowEditMinisterioModal(false);
+      setEditingMinisterio(null);
+      showToast.success("Ministério atualizado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao atualizar ministério:", error);
+      showToast.error("Erro ao atualizar ministério");
     }
   };
 
@@ -537,7 +594,7 @@ export const Ministerios = () => {
                 <div className="flex items-center gap-2 text-blue-600">
                   <Calendar className="h-4 w-4" />
                   <span className="text-sm font-medium">
-                    {formatDate(ministerio.date, "long")}
+                    Criado em: {formatDate(ministerio.created_at, "long")}
                   </span>
                 </div>
 
@@ -559,16 +616,28 @@ export const Ministerios = () => {
                     {"=>"} Clique para ver detalhes
                   </span>
                   {user?.role === "admin" && (
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteMinisterio(ministerio.id);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenEditMinisterio(ministerio);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteMinisterio(ministerio.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -656,6 +725,89 @@ export const Ministerios = () => {
                 checked={formData.notify_48h}
                 onChange={(e) =>
                   setFormData({ ...formData, notify_48h: e.target.checked })
+                }
+                className="rounded"
+              />
+              <span className="text-sm">Notificar 48h antes</span>
+            </label>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal Editar Ministério */}
+      <Modal
+        isOpen={showEditMinisterioModal}
+        onClose={() => {
+          setShowEditMinisterioModal(false);
+          setEditingMinisterio(null);
+        }}
+        title="Editar Ministério"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowEditMinisterioModal(false);
+                setEditingMinisterio(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleUpdateMinisterio}>Salvar Alterações</Button>
+          </>
+        }
+      >
+        <form className="space-y-4">
+          <Input
+            label="Nome do Ministério"
+            placeholder="Ex: Louvor, Mídia, Recepção..."
+            value={editFormData.title}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setEditFormData({ ...editFormData, title: e.target.value })
+            }
+            required
+          />
+          <Input
+            label="Descrição"
+            placeholder="Descrição do ministério..."
+            value={editFormData.description}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setEditFormData({ ...editFormData, description: e.target.value })
+            }
+          />
+          <Input
+            type="date"
+            label="Data Base"
+            value={editFormData.date}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setEditFormData({ ...editFormData, date: e.target.value })
+            }
+            required
+          />
+          <div className="space-y-2">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={editFormData.notify_24h}
+                onChange={(e) =>
+                  setEditFormData({
+                    ...editFormData,
+                    notify_24h: e.target.checked,
+                  })
+                }
+                className="rounded"
+              />
+              <span className="text-sm">Notificar 24h antes</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={editFormData.notify_48h}
+                onChange={(e) =>
+                  setEditFormData({
+                    ...editFormData,
+                    notify_48h: e.target.checked,
+                  })
                 }
                 className="rounded"
               />

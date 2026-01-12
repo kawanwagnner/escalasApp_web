@@ -3,6 +3,7 @@ import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Mail, Check, X, Clock, Calendar } from "lucide-react";
 import { formatDate } from "../utils/dateHelpers";
+import { showToast } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
 import { useMyInvites, useAcceptInvite, useDeclineInvite } from "../hooks";
 
@@ -15,16 +16,20 @@ export default function Convites() {
   const handleAccept = async (conviteId: string) => {
     try {
       await acceptInvite.mutateAsync({ id: conviteId, userId: user!.id });
+      showToast.success("Convite aceito! Você foi adicionado à escala.");
     } catch (error) {
       console.error("Erro ao aceitar convite:", error);
+      showToast.error("Erro ao aceitar convite. Tente novamente.");
     }
   };
 
   const handleDecline = async (conviteId: string) => {
     try {
       await declineInvite.mutateAsync(conviteId);
+      showToast.info("Convite recusado.");
     } catch (error) {
       console.error("Erro ao recusar convite:", error);
+      showToast.error("Erro ao recusar convite. Tente novamente.");
     }
   };
 

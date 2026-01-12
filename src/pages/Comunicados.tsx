@@ -7,6 +7,7 @@ import { Modal } from "../components/ui/Modal";
 import { edgeFunctionService } from "../services/edgeFunction.service";
 import { useAnnouncements, useCreateAnnouncement } from "../hooks";
 import { formatDate } from "../utils/dateHelpers";
+import { showToast } from "../utils/toast";
 import { Megaphone, Plus, Send, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -35,10 +36,10 @@ export default function Comunicados() {
     setSending(comunicadoId);
     try {
       await edgeFunctionService.sendAnnouncementEmails(comunicadoId);
-      alert("Emails enviados com sucesso!");
+      showToast.success("Emails enviados com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar emails:", error);
-      alert("Erro ao enviar emails");
+      showToast.error("Erro ao enviar emails");
     } finally {
       setSending(null);
     }
@@ -63,7 +64,7 @@ export default function Comunicados() {
             <h1 className="text-2xl font-bold text-gray-900">Comunicados</h1>
             <p className="text-gray-600">Gerencie os comunicados da igreja</p>
           </div>
-          {user?.role === 'admin' && (
+          {user?.role === "admin" && (
             <Button onClick={() => setShowModal(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Novo Comunicado
@@ -107,7 +108,7 @@ export default function Comunicados() {
                       {comunicado.message}
                     </p>
                   </div>
-                  {user?.role === 'admin' && (
+                  {user?.role === "admin" && (
                     <Button
                       variant="secondary"
                       size="sm"

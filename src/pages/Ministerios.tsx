@@ -5,12 +5,12 @@ import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
 import { Input } from "../components/ui/Input";
 import { slotService } from "../services/slot.service";
-import { inviteService } from "../services/invite.service";
 import { assignmentService } from "../services/assignment.service";
 import type { Schedule, Slot } from "../types";
 import { Plus, Trash2, Users, Clock, Calendar, Music } from "lucide-react";
 import { MemberAutocomplete } from "../components/ui/MemberAutocomplete";
 import { formatDate, formatTime } from "../utils/dateHelpers";
+import { showToast } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
 import {
   useSchedules,
@@ -23,6 +23,7 @@ import {
   useDeleteSlot,
 } from "../hooks/useSlots";
 import { useProfiles } from "../hooks/useProfiles";
+import { useCreateInvite, useDeleteInvite } from "../hooks/useInvites";
 
 export const Ministerios = () => {
   const { user } = useAuth();
@@ -32,6 +33,8 @@ export const Ministerios = () => {
   const deleteSchedule = useDeleteSchedule();
   const createSlot = useCreateSlot();
   const deleteSlot = useDeleteSlot();
+  const createInvite = useCreateInvite();
+  const deleteInvite = useDeleteInvite();
 
   const [showModal, setShowModal] = useState(false);
   const [showEscalasModal, setShowEscalasModal] = useState(false);
@@ -41,6 +44,7 @@ export const Ministerios = () => {
   );
   const [escalas, setEscalas] = useState<Slot[]>([]);
   const [loadingEscalas, setLoadingEscalas] = useState(false);
+  const [invitingMember, setInvitingMember] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -140,16 +144,31 @@ export const Ministerios = () => {
   };
 
   const handleInviteMember = async (slotId: string, memberEmail: string) => {
+    if (invitingMember) return;
+    setInvitingMember(true);
     try {
-      await inviteService.createInvite({
+      await createInvite.mutateAsync({
         slot_id: slotId,
         email: memberEmail,
       });
+      showToast.success("Convite enviado com sucesso!");
       if (selectedMinisterio) {
-        loadEscalas(selectedMinisterio.id);
+        await loadEscalas(selectedMinisterio.id);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao convidar membro:", error);
+      const errorMsg =
+        error.response?.data?.message || error.response?.data?.msg || "";
+
+      if (errorMsg.includes("unique") || errorMsg.includes("duplicate")) {
+        showToast.error(
+          "Este membro já possui um convite pendente ou já está na escala."
+        );
+      } else {
+        showToast.error("Erro ao enviar convite. Tente novamente.");
+      }
+    } finally {
+      setInvitingMember(false);
     }
   };
 
@@ -166,9 +185,9 @@ export const Ministerios = () => {
 
   const handleRemoveInvite = async (inviteId: string) => {
     try {
-      await inviteService.deleteInvite(inviteId);
+      await deleteInvite.mutateAsync(inviteId);
       if (selectedMinisterio) {
-        loadEscalas(selectedMinisterio.id);
+        await loadEscalas(selectedMinisterio.id);
       }
     } catch (error) {
       console.error("Erro ao remover convite:", error);
@@ -613,23 +632,21 @@ export const Ministerios = () => {
                       </div>
                     </div>
 
-                    {/* Convites Pendentes */}
-                    {(escala as any).invites?.filter(
-                      (i: any) => i.status === "pending"
-                    )?.length > 0 && (
-                      <div className="space-y-3 mb-4">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                          <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                          Pendentes (
-                          {
-                            (escala as any).invites?.filter(
-                              (i: any) => i.status === "pending"
-                            )?.length
-                          }
-                          )
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {(escala as any).invites
+                    {/* Convites Pendentes - sempre visível para admin */}
+                    <div className="space-y-3 mb-4">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                        <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                        Pendentes (
+                        {(escala as any).invites?.filter(
+                          (i: any) => i.status === "pending"
+                        )?.length || 0}
+                        )
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {(escala as any).invites?.filter(
+                          (i: any) => i.status === "pending"
+                        )?.length > 0 ? (
+                          (escala as any).invites
                             ?.filter((i: any) => i.status === "pending")
                             ?.map((invite: any) => (
                               <div
@@ -639,7 +656,10 @@ export const Ministerios = () => {
                                 <div className="w-5 h-5 bg-yellow-200 rounded-full flex items-center justify-center text-xs font-medium">
                                   {invite.email?.charAt(0)?.toUpperCase()}
                                 </div>
-                                {invite.email}
+                                <span className="max-w-[150px] truncate">
+                                  {membros.find((m) => m.email === invite.email)
+                                    ?.full_name || invite.email}
+                                </span>
                                 <span className="text-yellow-600 text-xs">
                                   ⏳
                                 </span>
@@ -655,55 +675,62 @@ export const Ministerios = () => {
                                   </button>
                                 )}
                               </div>
-                            ))}
-                        </div>
+                            ))
+                        ) : (
+                          <p className="text-sm text-gray-400 italic">
+                            Nenhum convite pendente
+                          </p>
+                        )}
                       </div>
-                    )}
+                    </div>
 
-                    {/* Convites Recusados */}
-                    {(escala as any).invites?.filter(
-                      (i: any) => i.status === "declined"
-                    )?.length > 0 && (
-                      <div className="space-y-3 mb-4">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                          Recusados (
-                          {
-                            (escala as any).invites?.filter(
-                              (i: any) => i.status === "declined"
-                            )?.length
-                          }
-                          )
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {(escala as any).invites
-                            ?.filter((i: any) => i.status === "declined")
-                            ?.map((invite: any) => (
-                              <div
-                                key={invite.id}
-                                className="flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200 text-red-800 text-sm rounded-full opacity-60 group"
-                              >
-                                <div className="w-5 h-5 bg-red-200 rounded-full flex items-center justify-center text-xs font-medium">
-                                  {invite.email?.charAt(0)?.toUpperCase()}
+                    {/* Convites Recusados - apenas para admin */}
+                    {user?.role === "admin" &&
+                      (escala as any).invites?.filter(
+                        (i: any) => i.status === "declined"
+                      )?.length > 0 && (
+                        <div className="space-y-3 mb-4">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                            Recusados (
+                            {
+                              (escala as any).invites?.filter(
+                                (i: any) => i.status === "declined"
+                              )?.length
+                            }
+                            )
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {(escala as any).invites
+                              ?.filter((i: any) => i.status === "declined")
+                              ?.map((invite: any) => (
+                                <div
+                                  key={invite.id}
+                                  className="flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200 text-red-800 text-sm rounded-full opacity-60 group"
+                                >
+                                  <div className="w-5 h-5 bg-red-200 rounded-full flex items-center justify-center text-xs font-medium">
+                                    {invite.email?.charAt(0)?.toUpperCase()}
+                                  </div>
+                                  {invite.email}
+                                  <span className="text-red-600 text-xs">
+                                    ✗
+                                  </span>
+                                  {user?.role === "admin" && (
+                                    <button
+                                      onClick={() =>
+                                        handleRemoveInvite(invite.id)
+                                      }
+                                      className="ml-1 w-4 h-4 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors opacity-100"
+                                      title="Remover recusa"
+                                    >
+                                      ×
+                                    </button>
+                                  )}
                                 </div>
-                                {invite.email}
-                                <span className="text-red-600 text-xs">✗</span>
-                                {user?.role === "admin" && (
-                                  <button
-                                    onClick={() =>
-                                      handleRemoveInvite(invite.id)
-                                    }
-                                    className="ml-1 w-4 h-4 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors opacity-100"
-                                    title="Remover recusa"
-                                  >
-                                    ×
-                                  </button>
-                                )}
-                              </div>
-                            ))}
+                              ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* Autocomplete para convidar membro - só admin */}
                     {user?.role === "admin" && (
@@ -718,6 +745,7 @@ export const Ministerios = () => {
                               (a: any) => a.user_id
                             ) || []),
                             ...((escala as any).invites
+                              ?.filter((i: any) => i.status === "pending")
                               ?.map(
                                 (i: any) =>
                                   membros.find((m: any) => m.email === i.email)

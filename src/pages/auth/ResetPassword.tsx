@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useCallback, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { verificationCodeService } from "../../services/verificationCode.service";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
@@ -21,8 +21,11 @@ import { handleAuthError } from "../../utils/errorHandler";
 import { Mail, ArrowLeft, Info, Send, KeyRound } from "lucide-react";
 
 export const ResetPassword: React.FC = () => {
+  const location = useLocation();
+  const emailFromState = (location.state as { email?: string })?.email || "";
+
   const [formData, setFormData] = useState<ResetPasswordFormData>({
-    email: "",
+    email: emailFromState,
   });
   const [errors, setErrors] = useState<
     Partial<Record<keyof ResetPasswordFormData, string>>
@@ -34,6 +37,14 @@ export const ResetPassword: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+
+  // Preenche email se veio do cadastro
+  useEffect(() => {
+    if (emailFromState) {
+      setFormData({ email: emailFromState });
+      setTouched({ email: true });
+    }
+  }, [emailFromState]);
 
   // Atualiza campo
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
@@ -20,8 +20,11 @@ import { handleAuthError } from "../../utils/errorHandler";
 import { Mail, Lock } from "lucide-react";
 
 export const Login: React.FC = () => {
+  const location = useLocation();
+  const emailFromState = (location.state as { email?: string })?.email || "";
+
   const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
+    email: emailFromState,
     password: "",
   });
   const [errors, setErrors] = useState<
@@ -44,6 +47,14 @@ export const Login: React.FC = () => {
       navigate("/update-password" + hash, { replace: true });
     }
   }, [navigate]);
+
+  // Preenche email se veio do cadastro
+  useEffect(() => {
+    if (emailFromState) {
+      setFormData((prev) => ({ ...prev, email: emailFromState }));
+      setTouched((prev) => ({ ...prev, email: true }));
+    }
+  }, [emailFromState]);
 
   // Atualiza campo e valida
   const handleChange =

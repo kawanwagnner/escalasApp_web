@@ -1,4 +1,4 @@
-import { api } from '../utils/api';
+import { api, publicApi } from '../utils/api';
 import type { AuthResponse, User } from '../types';
 
 export const authService = {
@@ -113,5 +113,19 @@ export const authService = {
     await api.put('/auth/v1/user', {
       password: newPassword,
     });
+  },
+
+  async checkEmailExists(email: string): Promise<boolean> {
+    try {
+      // Chama a Edge Function que tem acesso ao service role (bypass RLS)
+      const response = await publicApi.post('/functions/v1/check-email-exists', {
+        email: email.toLowerCase().trim(),
+      });
+      console.log('Verificação de email:', email, 'Resultado:', response.data);
+      return response.data?.exists === true;
+    } catch (error) {
+      console.error('Erro ao verificar email:', error);
+      return false;
+    }
   },
 };

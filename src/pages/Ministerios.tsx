@@ -4,10 +4,19 @@ import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
 import { Input } from "../components/ui/Input";
+import { RichTextarea } from "../components/ui/RichTextarea";
 import { slotService } from "../services/slot.service";
 import { assignmentService } from "../services/assignment.service";
 import type { Schedule, Slot } from "../types";
-import { Plus, Trash2, Users, Clock, Calendar, Music } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Users,
+  Clock,
+  Calendar,
+  Music,
+  Pencil,
+} from "lucide-react";
 import { MemberAutocomplete } from "../components/ui/MemberAutocomplete";
 import { formatDate, formatTime } from "../utils/dateHelpers";
 import { showToast } from "../utils/toast";
@@ -20,6 +29,7 @@ import {
 import {
   useSlotsBySchedule,
   useCreateSlot,
+  useUpdateSlot,
   useDeleteSlot,
 } from "../hooks/useSlots";
 import { useProfiles } from "../hooks/useProfiles";
@@ -32,6 +42,7 @@ export const Ministerios = () => {
   const createSchedule = useCreateSchedule();
   const deleteSchedule = useDeleteSchedule();
   const createSlot = useCreateSlot();
+  const updateSlot = useUpdateSlot();
   const deleteSlot = useDeleteSlot();
   const createInvite = useCreateInvite();
   const deleteInvite = useDeleteInvite();
@@ -39,6 +50,8 @@ export const Ministerios = () => {
   const [showModal, setShowModal] = useState(false);
   const [showEscalasModal, setShowEscalasModal] = useState(false);
   const [showNovaEscalaModal, setShowNovaEscalaModal] = useState(false);
+  const [showEditEscalaModal, setShowEditEscalaModal] = useState(false);
+  const [editingEscala, setEditingEscala] = useState<Slot | null>(null);
   const [selectedMinisterio, setSelectedMinisterio] = useState<Schedule | null>(
     null
   );
@@ -100,6 +113,12 @@ export const Ministerios = () => {
     e.preventDefault();
     if (!selectedMinisterio) return;
 
+    // Validação do título obrigatório
+    if (!escalaFormData.title.trim()) {
+      showToast.error("O título da escala é obrigatório");
+      return;
+    }
+
     try {
       // Combina a data do ministério com os horários para criar timestamps completos
       const baseDate =
@@ -129,6 +148,70 @@ export const Ministerios = () => {
       loadEscalas(selectedMinisterio.id);
     } catch (error) {
       console.error("Erro ao criar escala:", error);
+    }
+  };
+
+  const handleOpenEditEscala = (escala: Slot) => {
+    setEditingEscala(escala);
+    // Extrai hora do timestamp (formato: 2026-01-12T19:00:00)
+    const startTime = escala.start_time
+      ? formatTime(escala.start_time)
+      : "19:00";
+    const endTime = escala.end_time ? formatTime(escala.end_time) : "21:00";
+
+    setEscalaFormData({
+      title: escala.title || "",
+      description: escala.description || "",
+      start_time: startTime,
+      end_time: endTime,
+      mode: escala.mode || "manual",
+      capacity: escala.capacity || 5,
+    });
+    setShowEditEscalaModal(true);
+  };
+
+  const handleUpdateEscala = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingEscala || !selectedMinisterio) return;
+
+    if (!escalaFormData.title.trim()) {
+      showToast.error("O título da escala é obrigatório");
+      return;
+    }
+
+    try {
+      const baseDate =
+        selectedMinisterio.date || new Date().toISOString().split("T")[0];
+      const startTimestamp = `${baseDate}T${escalaFormData.start_time}:00`;
+      const endTimestamp = `${baseDate}T${escalaFormData.end_time}:00`;
+
+      await updateSlot.mutateAsync({
+        id: editingEscala.id,
+        data: {
+          title: escalaFormData.title,
+          description: escalaFormData.description,
+          start_time: startTimestamp,
+          end_time: endTimestamp,
+          mode: escalaFormData.mode,
+          capacity: escalaFormData.capacity,
+        },
+      });
+
+      setShowEditEscalaModal(false);
+      setEditingEscala(null);
+      setEscalaFormData({
+        title: "",
+        description: "",
+        start_time: "19:00",
+        end_time: "21:00",
+        mode: "manual",
+        capacity: 5,
+      });
+      loadEscalas(selectedMinisterio.id);
+      showToast.success("Escala atualizada com sucesso!");
+    } catch (error) {
+      console.error("Erro ao atualizar escala:", error);
+      showToast.error("Erro ao atualizar escala");
     }
   };
 
@@ -545,12 +628,22 @@ export const Ministerios = () => {
                           {escala.mode === "manual" ? "Manual" : "Automático"}
                         </span>
                         {user?.role === "admin" && (
-                          <button
-                            onClick={() => handleDeleteEscala(escala.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <>
+                            <button
+                              onClick={() => handleOpenEditEscala(escala)}
+                              className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Editar escala"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteEscala(escala.id)}
+                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Deletar escala"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -558,15 +651,32 @@ export const Ministerios = () => {
 
                   {/* Corpo da Escala */}
                   <div className="p-4">
-                    {/* Descrição com links clicáveis */}
+                    {/* Descrição com markdown e links clicáveis */}
                     {escala.description && (
-                      <p
-                        className="text-sm text-gray-600 mb-4 whitespace-pre-wrap wrap-break-words overflow-wrap-anywhere"
+                      <div
+                        className="text-sm text-gray-600 mb-4 whitespace-pre-wrap break-words"
                         dangerouslySetInnerHTML={{
-                          __html: escala.description.replace(
-                            /(https?:\/\/[^\s]+)/g,
-                            '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline break-all">$1</a>'
-                          ),
+                          __html: escala.description
+                            // Negrito: **texto** -> <strong>texto</strong>
+                            .replace(
+                              /\*\*(.+?)\*\*/g,
+                              '<strong class="font-bold text-gray-800">$1</strong>'
+                            )
+                            // Itálico: _texto_ -> <em>texto</em>
+                            .replace(
+                              /(?<!\w)_(.+?)_(?!\w)/g,
+                              '<em class="italic">$1</em>'
+                            )
+                            // Links: [texto](url) -> <a href="url">texto</a>
+                            .replace(
+                              /\[(.+?)\]\((.+?)\)/g,
+                              '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline">$1</a>'
+                            )
+                            // URLs diretas
+                            .replace(
+                              /(?<!href=")(https?:\/\/[^\s<]+)/g,
+                              '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline break-all">$1</a>'
+                            ),
                         }}
                       />
                     )}
@@ -805,16 +915,132 @@ export const Ministerios = () => {
             }
             required
           />
-          <Input
+          <RichTextarea
             label="Descrição"
-            placeholder="Detalhes da escala..."
+            placeholder="Detalhes da escala, links, instruções..."
             value={escalaFormData.description}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            onChange={(value) =>
               setEscalaFormData({
                 ...escalaFormData,
-                description: e.target.value,
+                description: value,
               })
             }
+            rows={4}
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              type="time"
+              label="Horário Início"
+              value={escalaFormData.start_time}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setEscalaFormData({
+                  ...escalaFormData,
+                  start_time: e.target.value,
+                })
+              }
+              required
+            />
+            <Input
+              type="time"
+              label="Horário Fim"
+              value={escalaFormData.end_time}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setEscalaFormData({
+                  ...escalaFormData,
+                  end_time: e.target.value,
+                })
+              }
+              required
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              type="number"
+              label="Capacidade"
+              value={escalaFormData.capacity}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setEscalaFormData({
+                  ...escalaFormData,
+                  capacity: parseInt(e.target.value),
+                })
+              }
+              min={1}
+              required
+            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Modo
+              </label>
+              <select
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                value={escalaFormData.mode}
+                onChange={(e) =>
+                  setEscalaFormData({
+                    ...escalaFormData,
+                    mode: e.target.value as "manual" | "livre",
+                  })
+                }
+              >
+                <option value="manual">Manual</option>
+                <option value="livre">Livre</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal Editar Escala */}
+      <Modal
+        isOpen={showEditEscalaModal}
+        onClose={() => {
+          setShowEditEscalaModal(false);
+          setEditingEscala(null);
+          setEscalaFormData({
+            title: "",
+            description: "",
+            start_time: "19:00",
+            end_time: "21:00",
+            mode: "manual",
+            capacity: 5,
+          });
+        }}
+        title="Editar Escala"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowEditEscalaModal(false);
+                setEditingEscala(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleUpdateEscala}>Salvar Alterações</Button>
+          </>
+        }
+      >
+        <form className="space-y-4">
+          <Input
+            label="Título da Escala *"
+            placeholder="Ex: Domingo Manhã, Quarta-feira..."
+            value={escalaFormData.title}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setEscalaFormData({ ...escalaFormData, title: e.target.value })
+            }
+            required
+          />
+          <RichTextarea
+            label="Descrição"
+            placeholder="Detalhes da escala, links, instruções..."
+            value={escalaFormData.description}
+            onChange={(value) =>
+              setEscalaFormData({
+                ...escalaFormData,
+                description: value,
+              })
+            }
+            rows={4}
           />
           <div className="grid grid-cols-2 gap-4">
             <Input

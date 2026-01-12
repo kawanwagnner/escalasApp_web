@@ -4,6 +4,7 @@ import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Modal } from "../components/ui/Modal";
+import { ConfirmActionModal } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import {
   useEvents,
@@ -29,6 +30,14 @@ export default function Eventos() {
     description: "",
     date: "",
   });
+
+  // Estados para o modal de confirmação de exclusão
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const openCreateModal = () => {
     setEditingEvent(null);
@@ -64,12 +73,24 @@ export default function Eventos() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este evento?")) return;
+  // Função para iniciar exclusão (abre modal)
+  const initiateDelete = (id: string, title: string) => {
+    setEventToDelete({ id, title });
+    setShowConfirmModal(true);
+  };
+
+  // Função que executa a exclusão após confirmação
+  const handleDelete = async () => {
+    if (!eventToDelete) return;
+    setIsDeleting(true);
     try {
-      await deleteEvent.mutateAsync(id);
+      await deleteEvent.mutateAsync(eventToDelete.id);
+      setShowConfirmModal(false);
+      setEventToDelete(null);
     } catch (error) {
       console.error("Erro ao excluir evento:", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -159,7 +180,9 @@ export default function Eventos() {
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(event.id)}
+                            onClick={() =>
+                              initiateDelete(event.id, event.title)
+                            }
                             className="p-2 text-gray-400 hover:text-red-600 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -240,6 +263,23 @@ export default function Eventos() {
             </div>
           </div>
         </Modal>
+
+        {/* Modal de Confirmação de Exclusão */}
+        <ConfirmActionModal
+          isOpen={showConfirmModal}
+          onClose={() => {
+            setShowConfirmModal(false);
+            setEventToDelete(null);
+          }}
+          onConfirm={handleDelete}
+          title="Excluir Evento"
+          message={`Deseja realmente excluir o evento "${eventToDelete?.title}"?`}
+          description="Este evento será removido permanentemente da agenda."
+          confirmText="Sim, excluir"
+          cancelText="Cancelar"
+          isLoading={isDeleting}
+          variant="danger"
+        />
       </div>
     </Layout>
   );

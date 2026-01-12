@@ -12,6 +12,8 @@ import {
   descriptionToSetlist,
   SetlistDisplay,
   isSetlistDescription,
+  ConfirmDeleteModal,
+  ConfirmActionModal,
 } from "../components/ui";
 import type { SetlistData } from "../components/ui";
 import { slotService } from "../services/slot.service";
@@ -76,6 +78,25 @@ export const Ministerios = () => {
   const [escalas, setEscalas] = useState<Slot[]>([]);
   const [loadingEscalas, setLoadingEscalas] = useState(false);
   const [invitingMember, setInvitingMember] = useState(false);
+
+  // Estados para o modal de confirmação de exclusão de membro
+  const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
+  const [pendingDeleteAssignment, setPendingDeleteAssignment] = useState<{
+    id: string;
+    memberName: string;
+    type: "assignment" | "invite";
+    inviteStatus?: "pending" | "declined";
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Estados para o modal de confirmação de exclusão de ministério/escala
+  const [showConfirmActionModal, setShowConfirmActionModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    type: "ministerio" | "escala";
+    id: string;
+    title: string;
+  } | null>(null);
+  const [isActionLoading, setIsActionLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -396,25 +417,52 @@ export const Ministerios = () => {
     }
   };
 
-  const handleDeleteMinisterio = async (id: string) => {
-    if (!confirm("Deseja realmente deletar este ministério?")) return;
+  // Função para iniciar exclusão de ministério (abre modal)
+  const initiateDeleteMinisterio = (id: string, title: string) => {
+    setPendingAction({ type: "ministerio", id, title });
+    setShowConfirmActionModal(true);
+  };
+
+  // Função para iniciar exclusão de escala (abre modal)
+  const initiateDeleteEscala = (id: string, title: string) => {
+    setPendingAction({ type: "escala", id, title });
+    setShowConfirmActionModal(true);
+  };
+
+  // Função que executa a exclusão após confirmação
+  const handleConfirmAction = async () => {
+    if (!pendingAction) return;
+
+    setIsActionLoading(true);
     try {
-      await deleteSchedule.mutateAsync(id);
+      if (pendingAction.type === "ministerio") {
+        await deleteSchedule.mutateAsync(pendingAction.id);
+        showToast.success("Ministério excluído com sucesso!");
+      } else {
+        await deleteSlot.mutateAsync(pendingAction.id);
+        if (selectedMinisterio) {
+          loadEscalas(selectedMinisterio.id);
+        }
+        showToast.success("Escala excluída com sucesso!");
+      }
+      setShowConfirmActionModal(false);
+      setPendingAction(null);
     } catch (error) {
-      console.error("Erro ao deletar ministério:", error);
+      console.error("Erro ao excluir:", error);
+      showToast.error(
+        pendingAction.type === "ministerio"
+          ? "Erro ao excluir ministério"
+          : "Erro ao excluir escala"
+      );
+    } finally {
+      setIsActionLoading(false);
     }
   };
 
-  const handleDeleteEscala = async (id: string) => {
-    if (!confirm("Deseja realmente deletar esta escala?")) return;
-    try {
-      await deleteSlot.mutateAsync(id);
-      if (selectedMinisterio) {
-        loadEscalas(selectedMinisterio.id);
-      }
-    } catch (error) {
-      console.error("Erro ao deletar escala:", error);
-    }
+  // Função para cancelar a ação
+  const cancelAction = () => {
+    setShowConfirmActionModal(false);
+    setPendingAction(null);
   };
 
   const handleInviteMember = async (slotId: string, memberEmail: string) => {
@@ -446,17 +494,68 @@ export const Ministerios = () => {
     }
   };
 
+  // Função para iniciar o processo de remoção (abre o modal)
+  const initiateRemoveAssignment = (
+    assignmentId: string,
+    memberName: string
+  ) => {
+    setPendingDeleteAssignment({
+      id: assignmentId,
+      memberName,
+      type: "assignment",
+    });
+    setShowConfirmDeleteModal(true);
+  };
+
+  // Função para iniciar o processo de remoção de convite (abre o modal)
+  const initiateRemoveInvite = (
+    inviteId: string,
+    memberName: string,
+    status: "pending" | "declined"
+  ) => {
+    setPendingDeleteAssignment({
+      id: inviteId,
+      memberName,
+      type: "invite",
+      inviteStatus: status,
+    });
+    setShowConfirmDeleteModal(true);
+  };
+
+  // Função que executa a remoção após confirmação
   const handleRemoveAssignment = async (assignmentId: string) => {
+    setIsDeleting(true);
     try {
       await assignmentService.unassignFromSlot(assignmentId);
       if (selectedMinisterio) {
         loadEscalas(selectedMinisterio.id);
       }
       showToast.success("Inscrição removida com sucesso!");
+      setShowConfirmDeleteModal(false);
+      setPendingDeleteAssignment(null);
     } catch (error) {
       console.error("Erro ao remover membro:", error);
       showToast.error("Erro ao remover inscrição");
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  // Função para confirmar remoção do modal
+  const confirmRemoveAssignment = async () => {
+    if (pendingDeleteAssignment) {
+      if (pendingDeleteAssignment.type === "assignment") {
+        await handleRemoveAssignment(pendingDeleteAssignment.id);
+      } else {
+        await handleRemoveInviteConfirmed(pendingDeleteAssignment.id);
+      }
+    }
+  };
+
+  // Função para cancelar/fechar o modal de confirmação
+  const cancelRemoveAssignment = () => {
+    setShowConfirmDeleteModal(false);
+    setPendingDeleteAssignment(null);
   };
 
   const handleSelfAssign = async (slotId: string) => {
@@ -483,14 +582,22 @@ export const Ministerios = () => {
     }
   };
 
-  const handleRemoveInvite = async (inviteId: string) => {
+  // Função que executa a remoção de convite após confirmação
+  const handleRemoveInviteConfirmed = async (inviteId: string) => {
+    setIsDeleting(true);
     try {
       await deleteInvite.mutateAsync(inviteId);
       if (selectedMinisterio) {
         await loadEscalas(selectedMinisterio.id);
       }
+      showToast.success("Convite removido com sucesso!");
+      setShowConfirmDeleteModal(false);
+      setPendingDeleteAssignment(null);
     } catch (error) {
       console.error("Erro ao remover convite:", error);
+      showToast.error("Erro ao remover convite");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -675,7 +782,10 @@ export const Ministerios = () => {
                         variant="danger"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteMinisterio(ministerio.id);
+                          initiateDeleteMinisterio(
+                            ministerio.id,
+                            ministerio.title
+                          );
                         }}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -939,7 +1049,9 @@ export const Ministerios = () => {
                               <Pencil className="h-4 w-4" />
                             </button>
                             <button
-                              onClick={() => handleDeleteEscala(escala.id)}
+                              onClick={() =>
+                                initiateDeleteEscala(escala.id, escala.title)
+                              }
                               className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                               title="Deletar escala"
                             >
@@ -1053,7 +1165,10 @@ export const Ministerios = () => {
                                 {user?.role === "admin" && (
                                   <button
                                     onClick={() =>
-                                      handleRemoveAssignment(assignment.id)
+                                      initiateRemoveAssignment(
+                                        assignment.id,
+                                        assignment.user?.full_name || "Membro"
+                                      )
                                     }
                                     className="ml-1 w-4 h-4 flex items-center justify-center text-green-600 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
                                     title="Remover membro"
@@ -1091,7 +1206,10 @@ export const Ministerios = () => {
                               <div className="flex justify-end">
                                 <button
                                   onClick={() =>
-                                    handleRemoveAssignment(myAssignment.id)
+                                    initiateRemoveAssignment(
+                                      myAssignment.id,
+                                      user?.full_name || "Minha inscrição"
+                                    )
                                   }
                                   className="mt-3 flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
                                 >
@@ -1153,7 +1271,13 @@ export const Ministerios = () => {
                                   {user?.role === "admin" && (
                                     <button
                                       onClick={() =>
-                                        handleRemoveInvite(invite.id)
+                                        initiateRemoveInvite(
+                                          invite.id,
+                                          membros.find(
+                                            (m) => m.email === invite.email
+                                          )?.full_name || invite.email,
+                                          "pending"
+                                        )
                                       }
                                       className="ml-1 w-4 h-4 flex items-center justify-center text-yellow-600 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
                                       title="Cancelar convite"
@@ -1207,7 +1331,13 @@ export const Ministerios = () => {
                                   {user?.role === "admin" && (
                                     <button
                                       onClick={() =>
-                                        handleRemoveInvite(invite.id)
+                                        initiateRemoveInvite(
+                                          invite.id,
+                                          membros.find(
+                                            (m) => m.email === invite.email
+                                          )?.full_name || invite.email,
+                                          "declined"
+                                        )
                                       }
                                       className="ml-1 w-4 h-4 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors opacity-100"
                                       title="Remover recusa"
@@ -1583,6 +1713,60 @@ export const Ministerios = () => {
           </div>
         </form>
       </Modal>
+
+      {/* Modal de Confirmação de Exclusão de Membro/Convite */}
+      <ConfirmDeleteModal
+        isOpen={showConfirmDeleteModal}
+        onClose={cancelRemoveAssignment}
+        onConfirm={confirmRemoveAssignment}
+        title={
+          pendingDeleteAssignment?.type === "invite"
+            ? pendingDeleteAssignment?.inviteStatus === "pending"
+              ? "Cancelar Convite"
+              : "Remover Recusa"
+            : "Remover da Escala"
+        }
+        message={
+          pendingDeleteAssignment?.type === "invite"
+            ? pendingDeleteAssignment?.inviteStatus === "pending"
+              ? "Você tem certeza que deseja cancelar o convite para este membro?"
+              : "Você tem certeza que deseja remover este registro de recusa?"
+            : "Você tem certeza que deseja remover este membro da escala?"
+        }
+        memberName={pendingDeleteAssignment?.memberName}
+        isLoading={isDeleting}
+        variant={
+          pendingDeleteAssignment?.inviteStatus === "pending"
+            ? "warning"
+            : "danger"
+        }
+      />
+
+      {/* Modal de Confirmação de Exclusão de Ministério/Escala */}
+      <ConfirmActionModal
+        isOpen={showConfirmActionModal}
+        onClose={cancelAction}
+        onConfirm={handleConfirmAction}
+        title={
+          pendingAction?.type === "ministerio"
+            ? "Excluir Ministério"
+            : "Excluir Escala"
+        }
+        message={
+          pendingAction?.type === "ministerio"
+            ? `Deseja realmente excluir o ministério "${pendingAction?.title}"?`
+            : `Deseja realmente excluir a escala "${pendingAction?.title}"?`
+        }
+        description={
+          pendingAction?.type === "ministerio"
+            ? "Todas as escalas e convites associados serão excluídos permanentemente."
+            : "Todos os convites e inscrições desta escala serão excluídos."
+        }
+        confirmText="Sim, excluir"
+        cancelText="Cancelar"
+        isLoading={isActionLoading}
+        variant="danger"
+      />
     </Layout>
   );
 };

@@ -2,6 +2,8 @@ export { Button } from './Button';
 export { Input } from './Input';
 export { Card } from './Card';
 export { Modal } from './Modal';
+export { ConfirmDeleteModal } from './ConfirmDeleteModal';
+export { ConfirmActionModal } from './ConfirmActionModal';
 export { MemberAutocomplete } from './MemberAutocomplete';
 export { RichTextarea } from './RichTextarea';
 export { SetlistForm, setlistToDescription, descriptionToSetlist } from './SetlistForm';

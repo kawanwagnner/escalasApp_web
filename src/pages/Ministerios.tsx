@@ -101,7 +101,6 @@ export const Ministerios = () => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    date: "",
     notify_24h: true,
     notify_48h: true,
     notify_48h_musician: true,
@@ -117,6 +116,7 @@ export const Ministerios = () => {
   const [escalaFormData, setEscalaFormData] = useState({
     title: "",
     description: "",
+    date: "",
     start_time: "19:00",
     end_time: "21:00",
     mode: "manual" as "manual" | "livre",
@@ -132,6 +132,8 @@ export const Ministerios = () => {
     songs: [],
     notes: "",
     playlistUrl: "",
+    organizers: "",
+    soundDesk: "",
   });
 
   // Função para verificar se é ministério de Louvor
@@ -221,13 +223,13 @@ export const Ministerios = () => {
     try {
       await createSchedule.mutateAsync({
         ...formData,
+        date: new Date().toISOString().split("T")[0],
         created_by: user!.id,
       });
       setShowModal(false);
       setFormData({
         title: "",
         description: "",
-        date: "",
         notify_24h: true,
         notify_48h: true,
         notify_48h_musician: true,
@@ -268,10 +270,14 @@ export const Ministerios = () => {
       finalDescription = setlistToDescription(setlistData);
     }
 
+    if (!escalaFormData.date) {
+      showToast.error("A data da escala é obrigatória");
+      return;
+    }
+
     try {
-      // Combina a data do ministério com os horários para criar timestamps completos
-      const baseDate =
-        selectedMinisterio.date || new Date().toISOString().split("T")[0];
+      // Usa a data do formulário com os horários para criar timestamps completos
+      const baseDate = escalaFormData.date;
       const startTimestamp = `${baseDate}T${escalaFormData.start_time}:00`;
       const endTimestamp = `${baseDate}T${escalaFormData.end_time}:00`;
 
@@ -289,6 +295,7 @@ export const Ministerios = () => {
       setEscalaFormData({
         title: "",
         description: "",
+        date: "",
         start_time: "19:00",
         end_time: "21:00",
         mode: "manual",
@@ -300,6 +307,8 @@ export const Ministerios = () => {
         songs: [],
         notes: "",
         playlistUrl: "",
+        organizers: "",
+        soundDesk: "",
       });
       setDescriptionMode("livre");
       loadEscalas(selectedMinisterio.id);
@@ -315,10 +324,14 @@ export const Ministerios = () => {
       ? formatTime(escala.start_time)
       : "19:00";
     const endTime = escala.end_time ? formatTime(escala.end_time) : "21:00";
+    // Extrai a data do slot
+    const slotDate =
+      escala.date || (escala.start_time ? escala.start_time.split("T")[0] : "");
 
     setEscalaFormData({
       title: escala.title || "",
       description: escala.description || "",
+      date: slotDate,
       start_time: startTime,
       end_time: endTime,
       mode: escala.mode || "manual",
@@ -333,11 +346,25 @@ export const Ministerios = () => {
         setSetlistData(parsedSetlist);
       } else {
         setDescriptionMode("livre");
-        setSetlistData({ title: "", songs: [], notes: "", playlistUrl: "" });
+        setSetlistData({
+          title: "",
+          songs: [],
+          notes: "",
+          playlistUrl: "",
+          organizers: "",
+          soundDesk: "",
+        });
       }
     } else {
       setDescriptionMode("livre");
-      setSetlistData({ title: "", songs: [], notes: "", playlistUrl: "" });
+      setSetlistData({
+        title: "",
+        songs: [],
+        notes: "",
+        playlistUrl: "",
+        organizers: "",
+        soundDesk: "",
+      });
     }
 
     setShowEditEscalaModal(true);
@@ -373,9 +400,13 @@ export const Ministerios = () => {
       finalDescription = setlistToDescription(setlistData);
     }
 
+    if (!escalaFormData.date) {
+      showToast.error("A data da escala é obrigatória");
+      return;
+    }
+
     try {
-      const baseDate =
-        selectedMinisterio.date || new Date().toISOString().split("T")[0];
+      const baseDate = escalaFormData.date;
       const startTimestamp = `${baseDate}T${escalaFormData.start_time}:00`;
       const endTimestamp = `${baseDate}T${escalaFormData.end_time}:00`;
 
@@ -384,6 +415,7 @@ export const Ministerios = () => {
         data: {
           title: escalaFormData.title,
           description: finalDescription,
+          date: baseDate,
           start_time: startTimestamp,
           end_time: endTimestamp,
           mode: escalaFormData.mode,
@@ -396,6 +428,7 @@ export const Ministerios = () => {
       setEscalaFormData({
         title: "",
         description: "",
+        date: "",
         start_time: "19:00",
         end_time: "21:00",
         mode: "manual",
@@ -407,6 +440,8 @@ export const Ministerios = () => {
         songs: [],
         notes: "",
         playlistUrl: "",
+        organizers: "",
+        soundDesk: "",
       });
       setDescriptionMode("livre");
       loadEscalas(selectedMinisterio.id);
@@ -851,15 +886,6 @@ export const Ministerios = () => {
               setFormData({ ...formData, description: e.target.value })
             }
           />
-          <Input
-            type="date"
-            label="Data Base"
-            value={formData.date}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setFormData({ ...formData, date: e.target.value })
-            }
-            required
-          />
           <div className="space-y-2">
             <label className="flex items-center gap-2">
               <input
@@ -1019,6 +1045,18 @@ export const Ministerios = () => {
                         <div>
                           <h4 className="font-semibold text-gray-900">
                             {escala.title}
+                            {escala.date && (
+                              <span className="ml-2 text-sm font-normal text-gray-500">
+                                •{" "}
+                                {new Date(
+                                  escala.date + "T00:00:00"
+                                ).toLocaleDateString("pt-BR", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                })}
+                              </span>
+                            )}
                           </h4>
                           <div className="flex items-center gap-2 text-xs text-gray-500">
                             <Clock className="h-3 w-3" />
@@ -1074,7 +1112,7 @@ export const Ministerios = () => {
                         </div>
                       ) : (
                         <div
-                          className="text-sm text-gray-600 mb-4 whitespace-pre-wrap break-words"
+                          className="text-sm text-gray-600 mb-4 whitespace-pre-wrap wrap-break-word"
                           dangerouslySetInnerHTML={{
                             __html: escala.description
                               // Negrito: **texto** -> <strong>texto</strong>
@@ -1260,7 +1298,7 @@ export const Ministerios = () => {
                                   <div className="w-5 h-5 bg-yellow-200 rounded-full flex items-center justify-center text-xs font-medium">
                                     {invite.email?.charAt(0)?.toUpperCase()}
                                   </div>
-                                  <span className="max-w-[150px] truncate">
+                                  <span className="max-w-37.5 truncate">
                                     {membros.find(
                                       (m) => m.email === invite.email
                                     )?.full_name || invite.email}
@@ -1393,7 +1431,14 @@ export const Ministerios = () => {
         onClose={() => {
           setShowNovaEscalaModal(false);
           setDescriptionMode("livre");
-          setSetlistData({ title: "", songs: [], notes: "", playlistUrl: "" });
+          setSetlistData({
+            title: "",
+            songs: [],
+            notes: "",
+            playlistUrl: "",
+            organizers: "",
+            soundDesk: "",
+          });
         }}
         title="Nova Escala"
         footer={
@@ -1408,6 +1453,8 @@ export const Ministerios = () => {
                   songs: [],
                   notes: "",
                   playlistUrl: "",
+                  organizers: "",
+                  soundDesk: "",
                 });
               }}
             >
@@ -1483,6 +1530,18 @@ export const Ministerios = () => {
               rows={4}
             />
           )}
+          <Input
+            type="date"
+            label="Data da Escala"
+            value={escalaFormData.date}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setEscalaFormData({
+                ...escalaFormData,
+                date: e.target.value,
+              })
+            }
+            required
+          />
           <div className="grid grid-cols-2 gap-4">
             <Input
               type="time"
@@ -1554,13 +1613,21 @@ export const Ministerios = () => {
           setEscalaFormData({
             title: "",
             description: "",
+            date: "",
             start_time: "19:00",
             end_time: "21:00",
             mode: "manual",
             capacity: 5,
           });
           setDescriptionMode("livre");
-          setSetlistData({ title: "", songs: [], notes: "", playlistUrl: "" });
+          setSetlistData({
+            title: "",
+            songs: [],
+            notes: "",
+            playlistUrl: "",
+            organizers: "",
+            soundDesk: "",
+          });
         }}
         title="Editar Escala"
         footer={
@@ -1576,6 +1643,8 @@ export const Ministerios = () => {
                   songs: [],
                   notes: "",
                   playlistUrl: "",
+                  organizers: "",
+                  soundDesk: "",
                 });
               }}
             >
@@ -1652,6 +1721,18 @@ export const Ministerios = () => {
             />
           )}
 
+          <Input
+            type="date"
+            label="Data da Escala"
+            value={escalaFormData.date}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setEscalaFormData({
+                ...escalaFormData,
+                date: e.target.value,
+              })
+            }
+            required
+          />
           <div className="grid grid-cols-2 gap-4">
             <Input
               type="time"

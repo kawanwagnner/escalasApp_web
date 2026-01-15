@@ -74,7 +74,7 @@ export const Dashboard: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Ministérios</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {allSchedules.length}
+                  {allSchedules?.length || "0"}
                 </p>
               </div>
               <Calendar className="h-12 w-12 text-blue-600 opacity-80" />
@@ -90,7 +90,7 @@ export const Dashboard: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Minhas Escalas</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {allAssignments.length}
+                  {allAssignments?.length || "0"}
                 </p>
               </div>
               <Clock className="h-12 w-12 text-green-600 opacity-80" />
@@ -106,7 +106,7 @@ export const Dashboard: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Convites Pendentes</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {invites.length}
+                  {invites?.length || "0"}
                 </p>
               </div>
               <Bell className="h-12 w-12 text-purple-600 opacity-80" />

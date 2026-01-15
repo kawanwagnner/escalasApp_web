@@ -22,6 +22,8 @@ export interface SetlistData {
   songs: SetlistSong[];
   notes: string;
   playlistUrl: string;
+  organizers: string;
+  soundDesk: string;
 }
 
 interface SetlistFormProps {
@@ -130,6 +132,22 @@ export const SetlistForm: React.FC<SetlistFormProps> = ({
         required
       />
 
+      {/* Organizadores do Dia */}
+      <Input
+        label="Organizadores do Dia"
+        placeholder="Ex: João, Maria, Pedro"
+        value={value.organizers || ""}
+        onChange={(e) => onChange({ ...value, organizers: e.target.value })}
+      />
+
+      {/* Mesa de Som */}
+      <Input
+        label="Mesa de Som"
+        placeholder="Ex: Carlos, Ana"
+        value={value.soundDesk || ""}
+        onChange={(e) => onChange({ ...value, soundDesk: e.target.value })}
+      />
+
       {/* Lista de Músicas */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
@@ -181,7 +199,7 @@ export const SetlistForm: React.FC<SetlistFormProps> = ({
                   </div>
 
                   {/* Número */}
-                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
+                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">
                     {index + 1}
                   </div>
 
@@ -199,7 +217,7 @@ export const SetlistForm: React.FC<SetlistFormProps> = ({
                   <button
                     type="button"
                     onClick={() => removeSong(index)}
-                    className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors flex-shrink-0"
+                    className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors shrink-0"
                     title="Remover música"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -259,7 +277,7 @@ export const SetlistForm: React.FC<SetlistFormProps> = ({
           value={value.notes}
           onChange={(e) => onChange({ ...value, notes: e.target.value })}
           rows={2}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none resize-none"
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none resize-y"
         />
       </div>
 
@@ -288,6 +306,21 @@ export const setlistToDescription = (data: SetlistData): string => {
   // Título do setlist
   if (data.title) {
     description += `**${data.title}**\n\n`;
+  }
+
+  // Organizadores do Dia
+  if (data.organizers) {
+    description += `Organizadores: ${data.organizers}\n`;
+  }
+
+  // Mesa de Som
+  if (data.soundDesk) {
+    description += `Mesa de Som: ${data.soundDesk}\n`;
+  }
+
+  // Adiciona linha em branco se tiver organizadores ou mesa de som
+  if (data.organizers || data.soundDesk) {
+    description += "\n";
   }
 
   // Lista de músicas
@@ -335,6 +368,8 @@ export const descriptionToSetlist = (
       songs: [],
       notes: "",
       playlistUrl: "",
+      organizers: "",
+      soundDesk: "",
     };
 
     let isInSongs = false;
@@ -344,6 +379,18 @@ export const descriptionToSetlist = (
       // Título (negrito no início)
       if (line.startsWith("**") && line.endsWith("**") && !data.title) {
         data.title = line.replace(/\*\*/g, "");
+        continue;
+      }
+
+      // Organizadores do Dia
+      if (line.toLowerCase().startsWith("organizadores:")) {
+        data.organizers = line.replace(/organizadores:\s*/i, "").trim();
+        continue;
+      }
+
+      // Mesa de Som
+      if (line.toLowerCase().startsWith("mesa de som:")) {
+        data.soundDesk = line.replace(/mesa de som:\s*/i, "").trim();
         continue;
       }
 

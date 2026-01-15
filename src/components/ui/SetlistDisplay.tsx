@@ -22,6 +22,27 @@ export const SetlistDisplay: React.FC<SetlistDisplayProps> = ({
         <h3 className="font-semibold text-gray-900">{setlist.title}</h3>
       )}
 
+      {/* Organizadores e Mesa de Som */}
+      {(setlist.organizers || setlist.soundDesk) && (
+        <div className="flex flex-wrap items-center gap-1.5 text-sm">
+          {setlist.organizers && (
+            <div className="flex items-center gap-1.5">
+              <span className="font-medium text-gray-700">Organizadores:</span>
+              <span className="text-gray-600">{setlist.organizers}</span>
+            </div>
+          )}
+          {setlist.organizers && setlist.soundDesk && (
+            <span className="text-gray-400">•</span>
+          )}
+          {setlist.soundDesk && (
+            <div className="flex items-center gap-1.5">
+              <span className="font-medium text-gray-700">Mesa de Som:</span>
+              <span className="text-gray-600">{setlist.soundDesk}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Lista de Músicas */}
       {setlist.songs.length > 0 && (
         <ol className="space-y-1.5">

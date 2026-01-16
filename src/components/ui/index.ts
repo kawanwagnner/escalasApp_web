@@ -9,3 +9,4 @@ export { RichTextarea } from './RichTextarea';
 export { SetlistForm, setlistToDescription, descriptionToSetlist } from './SetlistForm';
 export type { SetlistData, SetlistSong } from './SetlistForm';
 export { SetlistDisplay, isSetlistDescription } from './SetlistDisplay';
+export { DescriptionRenderer } from './DescriptionRenderer';

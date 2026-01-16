@@ -2,7 +2,7 @@ import { Layout } from "../components/layout/Layout";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Mail, Check, X, Clock, Calendar } from "lucide-react";
-import { formatDate } from "../utils/dateHelpers";
+import { formatDate, formatTime } from "../utils/dateHelpers";
 import { showToast } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
 import { useMyInvites, useAcceptInvite, useDeclineInvite } from "../hooks";
@@ -109,7 +109,7 @@ export default function Convites() {
                         {convite.slot?.start_time && (
                           <span className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
-                            {convite.slot.start_time} - {convite.slot.end_time}
+                            {formatTime(convite.slot.start_time)} - {formatTime(convite.slot.end_time)}
                           </span>
                         )}
                         <span className="flex items-center gap-1">

@@ -1,5 +1,7 @@
 import { useState, useRef } from "react";
-import { Bold, Italic, Link, List, ListOrdered } from "lucide-react";
+import { Bold, Italic, Link, List, ListOrdered, Image, Loader2 } from "lucide-react";
+import { storageService } from "../../services/storage.service";
+import { showToast } from "../../utils/toast";
 
 interface RichTextareaProps {
   label?: string;
@@ -8,6 +10,7 @@ interface RichTextareaProps {
   placeholder?: string;
   rows?: number;
   className?: string;
+  enableImageUpload?: boolean;
 }
 
 export const RichTextarea: React.FC<RichTextareaProps> = ({
@@ -17,8 +20,11 @@ export const RichTextarea: React.FC<RichTextareaProps> = ({
   placeholder = "Digite aqui...",
   rows = 4,
   className = "",
+  enableImageUpload = false,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Insere formatação no texto selecionado
   const insertFormatting = (prefix: string, suffix: string = prefix) => {
@@ -122,6 +128,53 @@ export const RichTextarea: React.FC<RichTextareaProps> = ({
     }, 0);
   };
 
+  // Handler para upload de imagem
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Valida a imagem
+    const validation = storageService.validateImage(file);
+    if (!validation.valid) {
+      showToast.error(validation.error || 'Erro ao validar imagem');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const imageUrl = await storageService.uploadImage(file, 'descricoes');
+
+      // Insere a imagem no texto usando markdown
+      const textarea = textareaRef.current;
+      if (textarea) {
+        const start = textarea.selectionStart;
+        const beforeText = value.substring(0, start);
+        const afterText = value.substring(start);
+        const imageMarkdown = `\n![Imagem](${imageUrl})\n`;
+        const newText = `${beforeText}${imageMarkdown}${afterText}`;
+        onChange(newText);
+
+        // Reposiciona o cursor após a imagem
+        setTimeout(() => {
+          textarea.focus();
+          const newPos = start + imageMarkdown.length;
+          textarea.setSelectionRange(newPos, newPos);
+        }, 0);
+      }
+
+      showToast.success('Imagem adicionada!');
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+      showToast.error('Erro ao fazer upload da imagem');
+    } finally {
+      setIsUploading(false);
+      // Limpa o input para permitir upload do mesmo arquivo
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className={className}>
       {label && (
@@ -172,8 +225,36 @@ export const RichTextarea: React.FC<RichTextareaProps> = ({
         >
           <ListOrdered className="h-4 w-4 text-gray-600" />
         </button>
+
+        {/* Botão de imagem - apenas se habilitado */}
+        {enableImageUpload && (
+          <>
+            <div className="w-px h-5 bg-gray-300 mx-1" />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="p-1.5 hover:bg-gray-200 rounded transition-colors disabled:opacity-50"
+              title="Inserir imagem"
+            >
+              {isUploading ? (
+                <Loader2 className="h-4 w-4 text-gray-600 animate-spin" />
+              ) : (
+                <Image className="h-4 w-4 text-gray-600" />
+              )}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+          </>
+        )}
+
         <span className="ml-auto text-xs text-gray-400 pr-2">
-          Suporta quebra de linha
+          {enableImageUpload ? "Suporta imagens" : "Suporta quebra de linha"}
         </span>
       </div>
 
@@ -186,13 +267,13 @@ export const RichTextarea: React.FC<RichTextareaProps> = ({
         rows={rows}
         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-b-lg 
                    focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                   transition-all outline-none resize-y min-h-[120px]"
+                   transition-all outline-none resize-y min-h-30"
       />
 
       {/* Dica */}
       <p className="mt-1 text-xs text-gray-400">
         Use Enter para quebrar linha • **texto** para negrito • _texto_ para
-        itálico
+        itálico{enableImageUpload && " • Clique no ícone de imagem para inserir fotos"}
       </p>
     </div>
   );

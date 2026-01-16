@@ -14,6 +14,7 @@ import {
   isSetlistDescription,
   ConfirmDeleteModal,
   ConfirmActionModal,
+  DescriptionRenderer,
 } from "../components/ui";
 import type { SetlistData } from "../components/ui";
 import { slotService } from "../services/slot.service";
@@ -146,6 +147,13 @@ export const Ministerios = () => {
       title.includes("musica") ||
       title.includes("worship")
     );
+  };
+
+  // Função para verificar se é ministério de Mídia
+  const isMidiaMinisterio = (ministerio: Schedule | null): boolean => {
+    if (!ministerio) return false;
+    const title = ministerio.title.toLowerCase();
+    return title.includes("mídia") || title.includes("midia");
   };
 
   const loadEscalas = async (ministerioId: string) => {
@@ -1069,11 +1077,10 @@ export const Ministerios = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <span
-                          className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                            escala.mode === "manual"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-emerald-100 text-emerald-700"
-                          }`}
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium ${escala.mode === "manual"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-emerald-100 text-emerald-700"
+                            }`}
                         >
                           {escala.mode === "manual" ? "Manual" : "Livre"}
                         </span>
@@ -1103,40 +1110,17 @@ export const Ministerios = () => {
 
                   {/* Corpo da Escala */}
                   <div className="p-4">
-                    {/* Descrição - usa SetlistDisplay para Louvor com setlist, ou markdown para outros */}
+                    {/* Descrição - usa SetlistDisplay para Louvor com setlist, DescriptionRenderer para mídia (com imagens), ou markdown para outros */}
                     {escala.description &&
                       (isLouvorMinisterio(selectedMinisterio) &&
-                      isSetlistDescription(escala.description) ? (
+                        isSetlistDescription(escala.description) ? (
                         <div className="mb-4">
                           <SetlistDisplay description={escala.description} />
                         </div>
                       ) : (
-                        <div
-                          className="text-sm text-gray-600 mb-4 whitespace-pre-wrap wrap-break-word"
-                          dangerouslySetInnerHTML={{
-                            __html: escala.description
-                              // Negrito: **texto** -> <strong>texto</strong>
-                              .replace(
-                                /\*\*(.+?)\*\*/g,
-                                '<strong class="font-bold text-gray-800">$1</strong>'
-                              )
-                              // Itálico: _texto_ -> <em>texto</em>
-                              .replace(
-                                /(?<!\w)_(.+?)_(?!\w)/g,
-                                '<em class="italic">$1</em>'
-                              )
-                              // Links: [texto](url) -> <a href="url">texto</a>
-                              .replace(
-                                /\[(.+?)\]\((.+?)\)/g,
-                                '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline">$1</a>'
-                              )
-                              // URLs diretas
-                              .replace(
-                                /(?<!href=")(https?:\/\/[^\s<]+)/g,
-                                '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline break-all">$1</a>'
-                              ),
-                          }}
-                        />
+                        <div className="mb-4">
+                          <DescriptionRenderer description={escala.description} />
+                        </div>
                       ))}
 
                     {/* Info de vagas - só conta confirmados */}
@@ -1485,11 +1469,10 @@ export const Ministerios = () => {
                 <button
                   type="button"
                   onClick={() => setDescriptionMode("livre")}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${
-                    descriptionMode === "livre"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${descriptionMode === "livre"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                    }`}
                 >
                   <FileText className="h-4 w-4" />
                   Livre
@@ -1497,11 +1480,10 @@ export const Ministerios = () => {
                 <button
                   type="button"
                   onClick={() => setDescriptionMode("setlist")}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${
-                    descriptionMode === "setlist"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${descriptionMode === "setlist"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                    }`}
                 >
                   <ListMusic className="h-4 w-4" />
                   Setlist
@@ -1512,7 +1494,7 @@ export const Ministerios = () => {
 
           {/* Conteúdo baseado no modo */}
           {isLouvorMinisterio(selectedMinisterio) &&
-          descriptionMode === "setlist" ? (
+            descriptionMode === "setlist" ? (
             <SetlistForm value={setlistData} onChange={setSetlistData} />
           ) : (
             <RichTextarea
@@ -1528,6 +1510,7 @@ export const Ministerios = () => {
                 })
               }
               rows={4}
+              enableImageUpload={isMidiaMinisterio(selectedMinisterio)}
             />
           )}
           <Input
@@ -1675,11 +1658,10 @@ export const Ministerios = () => {
                 <button
                   type="button"
                   onClick={() => setDescriptionMode("livre")}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${
-                    descriptionMode === "livre"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${descriptionMode === "livre"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                    }`}
                 >
                   <FileText className="h-4 w-4" />
                   Livre
@@ -1687,11 +1669,10 @@ export const Ministerios = () => {
                 <button
                   type="button"
                   onClick={() => setDescriptionMode("setlist")}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${
-                    descriptionMode === "setlist"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${descriptionMode === "setlist"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                    }`}
                 >
                   <ListMusic className="h-4 w-4" />
                   Setlist
@@ -1702,7 +1683,7 @@ export const Ministerios = () => {
 
           {/* Conteúdo baseado no modo */}
           {isLouvorMinisterio(selectedMinisterio) &&
-          descriptionMode === "setlist" ? (
+            descriptionMode === "setlist" ? (
             <SetlistForm value={setlistData} onChange={setSetlistData} />
           ) : (
             <RichTextarea
@@ -1718,6 +1699,7 @@ export const Ministerios = () => {
                 })
               }
               rows={4}
+              enableImageUpload={isMidiaMinisterio(selectedMinisterio)}
             />
           )}
 
